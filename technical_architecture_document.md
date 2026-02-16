@@ -40,6 +40,7 @@ graph TD
 - **初始化工具**: cargo
 
 ### 核心依赖
+
 ```toml
 [dependencies]
 bevy = "0.18.0"
@@ -55,6 +56,7 @@ rapier2d = "*"
 ## 3. 核心系统设计
 
 ### 3.1 游戏状态管理
+
 ```rust
 // 游戏状态枚举
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
@@ -71,6 +73,7 @@ pub enum GameState {
 ```
 
 ### 3.2 世界与地图系统
+
 ```rust
 // 地图组件
 #[derive(Component)]
@@ -104,6 +107,7 @@ pub enum TileType {
 ```
 
 ### 3.3 时间系统
+
 ```rust
 // 时间资源
 #[derive(Resource)]
@@ -132,6 +136,7 @@ pub enum DayPhase {
 ```
 
 ### 3.4 实体与组件系统
+
 ```rust
 // 玩家组件
 #[derive(Component)]
@@ -179,6 +184,7 @@ pub struct Building {
 ```
 
 ### 3.5 能量系统
+
 ```rust
 // 能量资源
 #[derive(Resource)]
@@ -206,6 +212,7 @@ pub struct EnergyGenerator {
 ```
 
 ### 3.6 数值系统
+
 ```rust
 // 大数值处理
 #[derive(Component, Debug, Clone)]
@@ -232,6 +239,7 @@ pub fn safe_multiply(a: u64, b: u64) -> u128 {
 ## 4. 网络系统设计
 
 ### 4.1 客户端-服务器架构
+
 ```rust
 // 网络配置
 #[derive(Resource)]
@@ -252,6 +260,7 @@ pub enum GameMessage {
 ```
 
 ### 4.2 同步策略
+
 - **状态同步**: 关键游戏状态（玩家位置、建筑、能量）
 - **事件同步**: 重要事件（建造、战斗、交互）
 - **预测与回滚**: 客户端预测 + 服务器权威
@@ -313,17 +322,20 @@ dark-forest/
 ## 6. 性能优化策略
 
 ### 6.1 ECS优化
+
 - 合理使用查询过滤器
 - 避免频繁的组件添加/删除
 - 使用系统调度优化执行顺序
 
 ### 6.2 渲染优化
+
 - 视锥体剔除
 - 遮挡剔除
 - 批处理渲染
 - LOD（细节层次）系统
 
 ### 6.3 内存管理
+
 - 对象池模式
 - 预分配内存
 - 避免运行时分配
@@ -331,16 +343,19 @@ dark-forest/
 ## 7. 扩展性考虑
 
 ### 7.1 模块化设计
+
 - 插件化架构
 - 系统间低耦合
 - 清晰的接口定义
 
 ### 7.2 数据驱动
+
 - 配置化游戏参数
 - 可热重载的资源
 - 灵活的实体模板系统
 
 ### 7.3 多人游戏扩展
+
 - 支持更多玩家
 - 服务器集群
 - 负载均衡
