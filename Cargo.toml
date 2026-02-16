@@ -1,0 +1,53 @@
+[package]
+name = "dark-forest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Use local Bevy source
+# Explicitly disable default features to control windowing backend (avoid wayland issues)
+bevy = { path = "/root/game/bevy", default-features = false, features = [
+    # Core features
+    "bevy_asset",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "multi_threaded",
+    "png",
+    "hdr",
+    "x11", # Only enable X11, disable wayland
+    "tonemapping_luts",
+    "default_font",
+    "bevy_gizmos",
+    "bevy_state",
+    "zstd_rust",
+    "bevy_log",
+    "bevy_window",
+] }
+serde = { version = "1.0", features = ["derive"] }
+rand = "0.8"
+
+# Note: Temporarily removed bevy_rapier2d, bevy_ecs_tilemap, bevy_renet
+# until we can confirm their compatibility or find local versions.
+# We will use native Bevy Sprite for Tilemap rendering for now.
+
+# Development dependencies
+[dev-dependencies]
+# bevy-inspector-egui = "0.31" # Commented out until compatibility confirmed
+
+# Optimization for development builds
+[profile.dev]
+opt-level = 1
+
+# Optimization for release builds
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
