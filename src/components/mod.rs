@@ -7,3 +7,4 @@ pub mod plant_upgrade;
 pub mod robot;
 pub mod equipment;
 pub mod crafting;
+pub mod combat;

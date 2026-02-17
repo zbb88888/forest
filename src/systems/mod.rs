@@ -13,3 +13,6 @@ pub mod enemy;
 pub mod enemy_spawn;
 pub mod enemy_attack;
 pub mod enemy_base;
+pub mod combat;
+pub mod player_combat;
+pub mod combat_effects;
