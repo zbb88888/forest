@@ -29,6 +29,7 @@ pub fn spawn_player(
             soil: 0,
             energy: 100, // Initial energy
         },
+        equipment_bar: EquipmentBar::default(),
         // Bevy 0.18: Sprite component (Required components Transform/Visibility added automatically if using simple spawn,
         // but since we use a Bundle, we must include them or use a tuple)
         sprite: Sprite {
