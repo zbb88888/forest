@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 # Use local Bevy source
 # Explicitly disable default features to control windowing backend (avoid wayland issues)
-bevy = { path = "/root/game/bevy", default-features = false, features = [
+bevy = { path = "/Users/ftwhmg/game/bevy", default-features = false, features = [
     # Core features
     "bevy_asset",
     "bevy_scene",
@@ -33,9 +33,7 @@ bevy = { path = "/root/game/bevy", default-features = false, features = [
 serde = { version = "1.0", features = ["derive"] }
 rand = "0.8"
 
-# Note: Temporarily removed bevy_rapier2d, bevy_ecs_tilemap, bevy_renet
-# until we can confirm their compatibility or find local versions.
-# We will use native Bevy Sprite for Tilemap rendering for now.
+# Using Bevy 0.18.1 with native Sprite for Tilemap rendering.
 
 # Development dependencies
 [dev-dependencies]

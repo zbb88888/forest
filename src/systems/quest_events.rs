@@ -23,7 +23,7 @@ pub struct QuestProgressEvent {
 
 /// 处理任务进度事件
 fn handle_quest_progress_events(
-    mut events: EventReader<QuestProgressEvent>,
+    mut events: Event<QuestProgressEvent>,
     mut quest_query: Query<&mut Quest>,
     quest_log_query: Query<&QuestLog>,
 ) {
@@ -74,7 +74,7 @@ fn handle_quest_progress_events(
 pub fn send_kill_event(
     enemy_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Kill,
@@ -87,7 +87,7 @@ pub fn send_kill_event(
 pub fn send_collect_event(
     item_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Collect,
@@ -100,7 +100,7 @@ pub fn send_collect_event(
 pub fn send_build_event(
     building_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Build,
@@ -113,7 +113,7 @@ pub fn send_build_event(
 pub fn send_defend_event(
     location_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Defend,
@@ -126,7 +126,7 @@ pub fn send_defend_event(
 pub fn send_explore_event(
     area_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Explore,
@@ -138,7 +138,7 @@ pub fn send_explore_event(
 /// 发送生存时间事件
 pub fn send_survive_event(
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Survive,
@@ -151,7 +151,7 @@ pub fn send_survive_event(
 pub fn send_craft_event(
     item_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Craft,
@@ -164,7 +164,7 @@ pub fn send_craft_event(
 pub fn send_harvest_event(
     plant_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Harvest,
@@ -177,7 +177,7 @@ pub fn send_harvest_event(
 pub fn send_upgrade_event(
     building_id: String,
     amount: u32,
-    events: &mut EventWriter<QuestProgressEvent>,
+    events: &mut Event<QuestProgressEvent>,
 ) {
     events.send(QuestProgressEvent {
         objective_type: QuestObjectiveType::Upgrade,

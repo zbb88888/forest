@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::hierarchy::DespawnRecursiveExt;
 use crate::states::GameState;
 use crate::components::resource::Inventory;
 use crate::components::player::Player;

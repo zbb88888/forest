@@ -244,7 +244,7 @@ fn update_tower_rotation(
 
 /// 更新防御统计
 fn update_defense_stats(
-    mut damage_events: EventReader<DamageEvent>,
+    mut damage_events: Event<DamageEvent>,
     mut tower_query: Query<&mut DefenseStats>,
 ) {
     for event in damage_events.iter() {

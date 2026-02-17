@@ -39,7 +39,7 @@ fn update_base_spawning(
     mut base_query: Query<(Entity, &mut EnemyBase, &Transform)>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<Color>>,
 ) {
     for (entity, mut base, transform) in base_query.iter_mut() {
         if !base.active {
@@ -82,7 +82,7 @@ fn update_base_spawning(
 fn spawn_from_fortress(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     base: &EnemyBase,
     transform: &Transform,
 ) {
@@ -114,7 +114,7 @@ fn spawn_from_fortress(
 fn spawn_from_mother_base(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     base: &EnemyBase,
     transform: &Transform,
 ) {
@@ -147,7 +147,7 @@ fn handle_base_destruction(
     mut commands: Commands,
     mut base_query: Query<(Entity, &EnemyBase, &Transform)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<Color>>,
 ) {
     for (entity, base, transform) in base_query.iter_mut() {
         // 检查基地是否被摧毁
@@ -165,7 +165,7 @@ fn handle_base_destruction(
 pub fn initialize_enemy_bases(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     map_width: u32,
     map_height: u32,
 ) {

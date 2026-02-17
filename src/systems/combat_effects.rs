@@ -108,9 +108,9 @@ impl CombatEffectVisual {
 /// 生成伤害效果
 fn spawn_damage_effects(
     mut commands: Commands,
-    mut damage_events: EventReader<DamageEvent>,
+    mut damage_events: Event<DamageEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<Color>>,
 ) {
     for event in damage_events.iter() {
         // 获取目标位置
@@ -131,16 +131,13 @@ fn spawn_damage_effects(
 
         // 创建伤害效果实体
         commands.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    color,
-                    custom_size: Some(Vec2::new(size, size)),
-                    ..default()
-                },
-                // 实际位置需要从目标实体获取
-                transform: Transform::from_xyz(0.0, 0.0, 10.0),
+            Sprite {
+                color,
+                custom_size: Some(Vec2::new(size, size)),
                 ..default()
             },
+            Transform::from_xyz(0.0, 0.0, 10.0),
+            GlobalTransform::default(),
             DamageEffect::new(event.damage, event.is_critical),
         ));
 
@@ -153,7 +150,7 @@ fn spawn_damage_effects(
 fn spawn_damage_particles(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     event: &DamageEvent,
 ) {
     let particle_count = if event.is_critical { 20 } else { 10 };
@@ -165,15 +162,13 @@ fn spawn_damage_particles(
         let lifetime = rand::random::<f32>() * 0.3 + 0.2;
 
         commands.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(1.0, 0.0, 0.0),
-                    custom_size: Some(Vec2::new(particle_size, particle_size)),
-                    ..default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, 9.0),
+            Sprite {
+                color: Color::srgb(1.0, 0.0, 0.0),
+                custom_size: Some(Vec2::new(particle_size, particle_size)),
                 ..default()
             },
+            Transform::from_xyz(0.0, 0.0, 9.0),
+            GlobalTransform::default(),
             ParticleEffect {
                 direction: Vec3::new(angle.cos(), angle.sin(), 0.0),
                 speed,
@@ -196,20 +191,18 @@ pub struct ParticleEffect {
 /// 生成治疗效果
 fn spawn_heal_effects(
     mut commands: Commands,
-    mut heal_events: EventReader<HealEvent>,
+    mut heal_events: Event<HealEvent>,
 ) {
     for event in heal_events.iter() {
         // 创建治疗数字效果
         commands.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(0.0, 1.0, 0.0),
-                    custom_size: Some(Vec2::new(16.0, 16.0)),
-                    ..default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, 10.0),
+            Sprite {
+                color: Color::srgb(0.0, 1.0, 0.0),
+                custom_size: Some(Vec2::new(16.0, 16.0)),
                 ..default()
             },
+            Transform::from_xyz(0.0, 0.0, 10.0),
+            GlobalTransform::default(),
             HealEffect::new(event.amount),
         ));
 
@@ -220,15 +213,13 @@ fn spawn_heal_effects(
             let lifetime = rand::random::<f32>() * 0.3 + 0.2;
 
             commands.spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::srgb(0.0, 1.0, 0.0),
-                        custom_size: Some(Vec2::new(4.0, 4.0)),
-                        ..default()
-                    },
-                    transform: Transform::from_xyz(0.0, 0.0, 9.0),
+                Sprite {
+                    color: Color::srgb(0.0, 1.0, 0.0),
+                    custom_size: Some(Vec2::new(4.0, 4.0)),
                     ..default()
                 },
+                Transform::from_xyz(0.0, 0.0, 9.0),
+                GlobalTransform::default(),
                 ParticleEffect {
                     direction: Vec3::new(angle.cos(), angle.sin(), 0.0),
                     speed,
@@ -243,9 +234,9 @@ fn spawn_heal_effects(
 /// 生成死亡效果
 fn spawn_death_effects(
     mut commands: Commands,
-    mut death_events: EventReader<DeathEvent>,
+    mut death_events: Event<DeathEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<Color>>,
 ) {
     for event in death_events.iter() {
         // 创建死亡粒子效果
@@ -255,15 +246,13 @@ fn spawn_death_effects(
             let lifetime = rand::random::<f32>() * 0.5 + 0.3;
 
             commands.spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::srgb(0.5, 0.5, 0.5),
-                        custom_size: Some(Vec2::new(6.0, 6.0)),
-                        ..default()
-                    },
-                    transform: Transform::from_xyz(0.0, 0.0, 9.0),
+                Sprite {
+                    color: Color::srgb(0.5, 0.5, 0.5),
+                    custom_size: Some(Vec2::new(6.0, 6.0)),
                     ..default()
                 },
+                Transform::from_xyz(0.0, 0.0, 9.0),
+                GlobalTransform::default(),
                 ParticleEffect {
                     direction: Vec3::new(angle.cos(), angle.sin(), 0.0),
                     speed,
@@ -275,15 +264,13 @@ fn spawn_death_effects(
 
         // 创建死亡效果实体
         commands.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(0.3, 0.3, 0.3),
-                    custom_size: Some(Vec2::new(32.0, 32.0)),
-                    ..default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, 8.0),
+            Sprite {
+                color: Color::srgb(0.3, 0.3, 0.3),
+                custom_size: Some(Vec2::new(32.0, 32.0)),
                 ..default()
             },
+            Transform::from_xyz(0.0, 0.0, 8.0),
+            GlobalTransform::default(),
             DeathEffect::new(),
         ));
     }

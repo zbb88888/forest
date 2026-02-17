@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use bevy::hierarchy::DespawnRecursiveExt;
 use crate::states::GameState;
 use crate::components::plant_upgrade::{PlantUpgrade, PlantLevel, PlantVarietyTree, PlantHarvestStats};
 use crate::components::plant::Plant;
-use crate::components::player::Inventory;
+use crate::components::resource::Inventory;
 
 pub struct PlantUpgradeUIPlugin;
 

@@ -25,7 +25,7 @@ fn update_enemy_spawns(
     mut enemy_query: Query<(Entity, &mut EnemyBase, &Transform)>,
     world_map: Res<WorldMap>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<Color>>,
 ) {
     for (entity, mut base, transform) in enemy_query.iter_mut() {
         if !base.active {
@@ -124,7 +124,7 @@ fn calculate_spawn_position(
 fn spawn_enemy(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     enemy_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
@@ -139,15 +139,13 @@ fn spawn_enemy(
     let color = enemy_type.color();
 
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color,
-                custom_size: Some(Vec2::new(tile_size * 0.8, tile_size * 0.8)),
-                ..default()
-            },
-            transform: Transform::from_xyz(pos_x, pos_y, 1.0),
+        Sprite {
+            color,
+            custom_size: Some(Vec2::new(tile_size * 0.8, tile_size * 0.8)),
             ..default()
         },
+        Transform::from_xyz(pos_x, pos_y, 1.0),
+        GlobalTransform::default(),
         enemy,
         EnemyPosition { tile_x, tile_y },
         EnemyStatus::default(),
@@ -162,7 +160,7 @@ fn update_base_spawns(
     mut commands: Commands,
     world_map: Res<WorldMap>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<Color>>,
 ) {
     // 这里可以添加定期生成新基地的逻辑
     // 例如：每X分钟生成一个新的机器人堡垒或AI母巢
@@ -215,7 +213,7 @@ fn update_base_spawns(
 fn spawn_base(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     base_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
@@ -233,15 +231,13 @@ fn spawn_base(
     };
 
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color,
-                custom_size: Some(Vec2::new(size, size)),
-                ..default()
-            },
-            transform: Transform::from_xyz(pos_x, pos_y, 0.5),
+        Sprite {
+            color,
+            custom_size: Some(Vec2::new(size, size)),
             ..default()
         },
+        Transform::from_xyz(pos_x, pos_y, 0.5),
+        GlobalTransform::default(),
         EnemyBase::new(base_type),
         EnemyPosition { tile_x, tile_y },
     ));
@@ -253,7 +249,7 @@ fn spawn_base(
 pub fn spawn_enemy_at(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     enemy_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
@@ -265,7 +261,7 @@ pub fn spawn_enemy_at(
 pub fn spawn_base_at(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<Color>>,
     base_type: EnemyType,
     tile_x: u32,
     tile_y: u32,

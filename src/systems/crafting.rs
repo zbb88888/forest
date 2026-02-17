@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use crate::components::crafting::{
     CraftingRecipe, RecipeBook, Inventory, QualityControl, UpgradeOptimization,
-    MaterialType, EquipmentType, EquipmentRarity
+    MaterialType
 };
-use crate::components::equipment::{Equipment, EquipmentStats};
+use crate::components::equipment::{Equipment, EquipmentStats, EquipmentType, EquipmentRarity};
 use rand::Rng;
 
 /// 装备制造系统插件

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::components::plant_upgrade::{PlantUpgrade, PlantVarietyTree, PlantHarvestStats, PlantLevel};
 use crate::components::plant::{Plant, PlantType};
-use crate::components::player::Inventory;
+use crate::components::resource::Inventory;
 
 /// 植物升级系统插件
 pub struct PlantUpgradePlugin;

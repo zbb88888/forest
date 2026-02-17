@@ -128,19 +128,17 @@ fn perform_melee_attack(
     let attack_range = enemy.stats.attack_range;
 
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::srgb(1.0, 0.0, 0.0),
-                custom_size: Some(Vec2::new(attack_range, attack_range * 0.5)),
-                ..default()
-            },
-            transform: Transform {
-                translation: enemy_transform.translation + direction * (attack_range / 2.0),
-                rotation: Quat::from_rotation_z(direction.y.atan2(direction.x)),
-                ..default()
-            },
+        Sprite {
+            color: Color::srgb(1.0, 0.0, 0.0),
+            custom_size: Some(Vec2::new(attack_range, attack_range * 0.5)),
             ..default()
         },
+        Transform {
+            translation: enemy_transform.translation + direction * (attack_range / 2.0),
+            rotation: Quat::from_rotation_z(direction.y.atan2(direction.x)),
+            ..default()
+        },
+        GlobalTransform::default(),
         AttackEffect::new(enemy.stats.damage, 0.2, AttackType::Melee),
     ));
 
@@ -163,19 +161,17 @@ fn perform_laser_attack(
     let laser_length = enemy.stats.attack_range;
 
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::srgb(0.0, 1.0, 1.0),
-                custom_size: Some(Vec2::new(laser_length, 4.0)),
-                ..default()
-            },
-            transform: Transform {
-                translation: enemy_transform.translation + direction * (laser_length / 2.0),
-                rotation: Quat::from_rotation_z(direction.y.atan2(direction.x)),
-                ..default()
-            },
+        Sprite {
+            color: Color::srgb(0.0, 1.0, 1.0),
+            custom_size: Some(Vec2::new(laser_length, 4.0)),
             ..default()
         },
+        Transform {
+            translation: enemy_transform.translation + direction * (laser_length / 2.0),
+            rotation: Quat::from_rotation_z(direction.y.atan2(direction.x)),
+            ..default()
+        },
+        GlobalTransform::default(),
         AttackEffect::new(enemy.stats.damage, 0.3, AttackType::Laser),
     ));
 
@@ -197,15 +193,13 @@ fn perform_spit_attack(
     let speed = 200.0;
 
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::srgb(0.5, 1.0, 0.5),
-                custom_size: Some(Vec2::new(8.0, 8.0)),
-                ..default()
-            },
-            transform: *enemy_transform,
+        Sprite {
+            color: Color::srgb(0.5, 1.0, 0.5),
+            custom_size: Some(Vec2::new(8.0, 8.0)),
             ..default()
         },
+        *enemy_transform,
+        GlobalTransform::default(),
         AttackEffect::new(enemy.stats.damage, 2.0, AttackType::Spit),
         Projectile {
             direction,

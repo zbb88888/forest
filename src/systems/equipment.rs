@@ -64,7 +64,7 @@ fn generate_random_equipment() -> Equipment {
 }
 
 /// 格式化稀有度名称
-fn format_rarity(rarity: EquipmentRarity) -> &str {
+fn format_rarity(rarity: EquipmentRarity) -> &'static str {
     match rarity {
         EquipmentRarity::Common => "普通",
         EquipmentRarity::Uncommon => "稀有",

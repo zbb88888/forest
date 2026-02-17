@@ -40,7 +40,7 @@ fn update_combat_cooldowns(
 /// 处理伤害事件
 fn process_damage_events(
     mut commands: Commands,
-    mut damage_events: EventReader<DamageEvent>,
+    mut damage_events: Event<DamageEvent>,
     mut combat_query: Query<&mut Combat>,
     mut enemy_query: Query<&mut Enemy>,
     mut player_query: Query<&mut Player>,
@@ -80,7 +80,7 @@ fn process_damage_events(
 
 /// 处理治疗事件
 fn process_heal_events(
-    mut heal_events: EventReader<HealEvent>,
+    mut heal_events: Event<HealEvent>,
     mut enemy_query: Query<&mut Enemy>,
 ) {
     for event in heal_events.iter() {
@@ -93,7 +93,7 @@ fn process_heal_events(
 
 /// 处理死亡事件
 fn process_death_events(
-    mut death_events: EventReader<DeathEvent>,
+    mut death_events: Event<DeathEvent>,
     mut commands: Commands,
     mut combat_query: Query<&mut CombatStats>,
 ) {
