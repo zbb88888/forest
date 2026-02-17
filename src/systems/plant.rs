@@ -161,11 +161,18 @@ pub fn harvest_plants(
     {
         let click_range = 32.0;
 
-        for (entity, plant, transform) in plants_query.iter() {
+        for (entity, plant, transform, upgrade) in plants_query.iter() {
             let distance = transform.translation.truncate().distance(world_position);
 
             if distance < click_range && plant.is_harvestable() {
-                let reward = plant.calculate_harvest_reward();
+                // 计算基础奖励
+                let base_reward = plant.calculate_harvest_reward();
+                // 应用升级加成
+                let reward = if let Some(upgrade) = upgrade {
+                    (base_reward as f32 * (1.0 + upgrade.output_bonus)) as u32
+                } else {
+                    base_reward
+                };
 
                 // 记录收获统计
                 harvest_stats.record_harvest(plant.plant_type);
