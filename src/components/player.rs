@@ -8,10 +8,13 @@ pub struct Player {
     pub name: String,
 }
 
+use crate::components::equipment::EquipmentBar;
+
 #[derive(Bundle)]
 pub struct PlayerBundle {
     pub player: Player,
     pub inventory: Inventory,
+    pub equipment_bar: EquipmentBar,
     pub sprite: Sprite,     // Added Sprite component
     pub transform: Transform,
     // Add other bundles like SpriteBundle/GlobalTransform if needed

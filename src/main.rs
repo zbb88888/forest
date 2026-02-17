@@ -53,10 +53,27 @@ fn main() {
 
     app.init_state::<GameState>()
         .add_systems(Startup, setup)
+        // Initialize game time and lighting
+        .add_systems(Startup, systems::time::init_game_time)
+        .add_systems(Startup, systems::lighting::init_lighting)
         // Move map and player setup to InGame state
         .add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
-        // Run player movement only in InGame state
-        .add_systems(Update, systems::player::move_player_randomly.run_if(in_state(GameState::InGame)))
+        // Run systems only in InGame state
+        .add_systems(Update, (
+            systems::time::update_time,
+            systems::lighting::update_lighting,
+            systems::player::move_player_randomly,
+            systems::plant::plant_seed,
+            systems::plant::grow_plants,
+            systems::plant::harvest_plants,
+            systems::plant::plant_decay,
+            systems::robot::spawn_robot,
+            systems::robot::robot_ai_system,
+            systems::equipment::spawn_random_equipment,
+            systems::equipment::pickup_equipment,
+            systems::equipment::upgrade_equipment,
+            systems::equipment::display_equipment_info,
+        ).run_if(in_state(GameState::InGame)))
         .run();
 }
 

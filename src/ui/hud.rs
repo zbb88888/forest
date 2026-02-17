@@ -3,6 +3,7 @@ use bevy::hierarchy::DespawnRecursiveExt;
 use crate::states::GameState;
 use crate::components::resource::Inventory;
 use crate::components::player::Player;
+use crate::systems::time::{GameTime, DayPhase, MoonPhase};
 
 pub struct HUDPlugin;
 
@@ -26,8 +27,17 @@ struct MetalText;
 #[derive(Component)]
 struct SoilText;
 
+#[derive(Component)]
+struct TimeText;
+
+#[derive(Component)]
+struct DayPhaseText;
+
+#[derive(Component)]
+struct MoonPhaseText;
+
 fn setup_hud(mut commands: Commands) {
-    // HUD Root Node
+    // Left HUD - Resources
     commands
         .spawn((
             Node {
@@ -74,6 +84,54 @@ fn setup_hud(mut commands: Commands) {
                 SoilText,
             ));
         });
+
+    // Right HUD - Time and Moon Phase
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(10.0),
+                right: Val::Px(10.0),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::FlexEnd,
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)), // Semi-transparent black
+        ))
+        .with_children(|parent| {
+            // Time
+            parent.spawn((
+                Text::new("Day 1 06:00"),
+                TextFont {
+                    font_size: 20.0,
+                    ..default()
+                },
+                TextColor(Color::WHITE),
+                TimeText,
+            ));
+
+            // Day Phase
+            parent.spawn((
+                Text::new("Day"),
+                TextFont {
+                    font_size: 18.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.9, 0.9, 0.7)), // Light yellow
+                DayPhaseText,
+            ));
+
+            // Moon Phase
+            parent.spawn((
+                Text::new("New Moon"),
+                TextFont {
+                    font_size: 18.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.7, 0.7, 0.9)), // Light blue
+                MoonPhaseText,
+            ));
+        });
 }
 
 fn update_hud(
@@ -81,7 +139,12 @@ fn update_hud(
     mut energy_query: Query<&mut Text, (With<EnergyText>, Without<MetalText>, Without<SoilText>)>,
     mut metal_query: Query<&mut Text, (With<MetalText>, Without<EnergyText>, Without<SoilText>)>,
     mut soil_query: Query<&mut Text, (With<SoilText>, Without<EnergyText>, Without<MetalText>)>,
+    game_time: Res<GameTime>,
+    mut time_query: Query<&mut Text, With<TimeText>>,
+    mut day_phase_query: Query<&mut Text, With<DayPhaseText>>,
+    mut moon_phase_query: Query<&mut Text, With<MoonPhaseText>>,
 ) {
+    // Update resources
     if let Some(inventory) = player_query.iter().next() {
         for mut text in energy_query.iter_mut() {
             text.0 = format!("Energy: {}", inventory.energy);
@@ -92,6 +155,43 @@ fn update_hud(
         for mut text in soil_query.iter_mut() {
             text.0 = format!("Soil: {}", inventory.soil);
         }
+    }
+
+    // Update time display
+    for mut text in time_query.iter_mut() {
+        text.0 = format!(
+            "Day {} {:02.0}:{:02.0}",
+            game_time.day,
+            game_time.hour,
+            game_time.minute
+        );
+    }
+
+    // Update day phase display
+    for mut text in day_phase_query.iter_mut() {
+        let phase_name = match game_time.current_phase {
+            DayPhase::Dawn => "Dawn",
+            DayPhase::Day => "Day",
+            DayPhase::Dusk => "Dusk",
+            DayPhase::Night => "Night",
+        };
+        text.0 = format!("{}", phase_name);
+    }
+
+    // Update moon phase display
+    for mut text in moon_phase_query.iter_mut() {
+        let phase_name = match game_time.moon_phase {
+            MoonPhase::NewMoon => "New Moon",
+            MoonPhase::WaxingCrescent => "Waxing Crescent",
+            MoonPhase::FirstQuarter => "First Quarter",
+            MoonPhase::WaxingGibbous => "Waxing Gibbous",
+            MoonPhase::FullMoon => "Full Moon",
+            MoonPhase::WaningGibbous => "Waning Gibbous",
+            MoonPhase::LastQuarter => "Last Quarter",
+            MoonPhase::WaningCrescent => "Waning Crescent",
+            MoonPhase::DarkMoon => "Dark Moon",
+        };
+        text.0 = format!("{}", phase_name);
     }
 }
 
