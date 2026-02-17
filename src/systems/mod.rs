@@ -9,3 +9,7 @@ pub mod robot;
 pub mod equipment;
 pub mod crafting;
 pub mod building;
+pub mod enemy;
+pub mod enemy_spawn;
+pub mod enemy_attack;
+pub mod enemy_base;
