@@ -8,3 +8,7 @@ pub mod robot;
 pub mod equipment;
 pub mod crafting;
 pub mod combat;
+pub mod defense;
+pub mod quest;
+pub mod achievement;
+pub mod save;
