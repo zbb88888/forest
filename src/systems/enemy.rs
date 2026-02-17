@@ -6,9 +6,9 @@ use crate::components::player::Player;
 use crate::resources::world::WorldMap;
 
 /// 敌人AI系统插件
-pub struct EnemyAIPlugin;
+pub struct EnemyPlugin;
 
-impl Plugin for EnemyAIPlugin {
+impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
             update_enemy_ai,

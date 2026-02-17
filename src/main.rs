@@ -19,6 +19,24 @@ use ui::building::BuildingUIPlugin;
 use systems::plant_upgrade::PlantUpgradePlugin;
 use systems::crafting::CraftingPlugin;
 use systems::building::BuildingPlugin;
+use systems::enemy::EnemyPlugin;
+use systems::enemy_spawn::EnemySpawnPlugin;
+use systems::enemy_attack::EnemyAttackPlugin;
+use systems::enemy_base::EnemyBasePlugin;
+use systems::combat::CombatPlugin;
+use systems::player_combat::PlayerCombatPlugin;
+use systems::combat_effects::CombatEffectsPlugin;
+use systems::defense_tower::DefenseTowerPlugin;
+use systems::defense_wall::DefenseWallPlugin;
+use systems::defense_range::DefenseRangePlugin;
+use systems::quest_manager::QuestManagerPlugin;
+use systems::quest_events::QuestEventsPlugin;
+use systems::quest_generator::QuestGeneratorPlugin;
+use systems::achievement_manager::AchievementManagerPlugin;
+use systems::achievement_events::AchievementEventsPlugin;
+use systems::achievement_generator::AchievementGeneratorPlugin;
+use systems::save_manager::SaveManagerPlugin;
+use systems::save_ui::SaveUIPlugin;
 
 fn main() {
     let is_headless = env::var("HEADLESS").is_ok();
@@ -71,6 +89,30 @@ fn main() {
         // Add building system
         .add_plugins(BuildingPlugin)
         .add_plugins(BuildingUIPlugin)
+        // Add enemy system
+        .add_plugins(EnemyPlugin)
+        .add_plugins(EnemySpawnPlugin)
+        .add_plugins(EnemyAttackPlugin)
+        .add_plugins(EnemyBasePlugin)
+        // Add combat system
+        .add_plugins(CombatPlugin)
+        .add_plugins(PlayerCombatPlugin)
+        .add_plugins(CombatEffectsPlugin)
+        // Add defense system
+        .add_plugins(DefenseTowerPlugin)
+        .add_plugins(DefenseWallPlugin)
+        .add_plugins(DefenseRangePlugin)
+        // Add quest system
+        .add_plugins(QuestManagerPlugin)
+        .add_plugins(QuestEventsPlugin)
+        .add_plugins(QuestGeneratorPlugin)
+        // Add achievement system
+        .add_plugins(AchievementManagerPlugin)
+        .add_plugins(AchievementEventsPlugin)
+        .add_plugins(AchievementGeneratorPlugin)
+        // Add save system
+        .add_plugins(SaveManagerPlugin)
+        .add_plugins(SaveUIPlugin)
         // Move map and player setup to InGame state
         .add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
         // Run systems only in InGame state
