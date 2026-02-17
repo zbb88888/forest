@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::components::plant::{Plant, PlantType, Growable, Plantable, Harvestable};
+use crate::components::plant_upgrade::PlantUpgrade;
 use crate::components::resource::{ResourceItem, ResourceType};
 use crate::resources::world::{WorldMap, TileType};
 use crate::systems::time::{GameTime, DayPhase};
@@ -78,6 +79,7 @@ fn spawn_plant(
         ),
         plant,
         growable,
+        PlantUpgrade::new(),
         Plantable,
     ));
 }
@@ -87,7 +89,7 @@ pub fn grow_plants(
     time: Res<Time>,
     game_time: Res<GameTime>,
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Plant, &mut Growable, &mut Transform)>,
+    mut query: Query<(Entity, &mut Plant, &mut Growable, &mut Transform, Option<&PlantUpgrade>)>,
 ) {
     // 白天生长更快
     let day_multiplier = match game_time.current_phase {
@@ -96,14 +98,19 @@ pub fn grow_plants(
         DayPhase::Night => 0.5,
     };
 
-    for (entity, mut plant, mut growable, mut transform) in query.iter_mut() {
+    for (entity, mut plant, mut growable, mut transform, upgrade) in query.iter_mut() {
         // 检查植物健康度和资源水平
         if plant.health <= 0.0 || plant.water_level <= 0.0 || plant.nutrient_level <= 0.0 {
             continue;
         }
 
-        // 计算生长速率
-        let growth_rate = growable.base_growth_rate * day_multiplier * plant.health;
+        // 计算生长速率，考虑升级加成
+        let base_growth_rate = growable.base_growth_rate;
+        let growth_rate = if let Some(upgrade) = upgrade {
+            upgrade.calculate_growth_speed(base_growth_rate) * day_multiplier * plant.health
+        } else {
+            base_growth_rate * day_multiplier * plant.health
+        };
         growable.growth_progress += growth_rate * time.delta_seconds();
 
         // 更新植物状态
@@ -135,10 +142,11 @@ pub fn grow_plants(
 pub fn harvest_plants(
     mut commands: Commands,
     mut player_inventory: Query<&mut crate::components::resource::Inventory, With<crate::components::player::Player>>,
+    mut harvest_stats: ResMut<crate::components::plant_upgrade::PlantHarvestStats>,
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
-    plants_query: Query<(Entity, &Plant, &Transform)>,
+    plants_query: Query<(Entity, &Plant, &Transform, Option<&PlantUpgrade>)>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
         return;
@@ -158,6 +166,9 @@ pub fn harvest_plants(
 
             if distance < click_range && plant.is_harvestable() {
                 let reward = plant.calculate_harvest_reward();
+
+                // 记录收获统计
+                harvest_stats.record_harvest(plant.plant_type);
 
                 // 添加资源到玩家背包
                 if let Ok(mut inventory) = player_inventory.get_single_mut() {

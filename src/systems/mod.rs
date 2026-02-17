@@ -4,5 +4,6 @@ pub mod energy;
 pub mod player;
 pub mod lighting;
 pub mod plant;
+pub mod plant_upgrade;
 pub mod robot;
 pub mod equipment;
