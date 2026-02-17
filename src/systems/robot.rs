@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use crate::components::robot::{Robot, RobotType, RobotTask, RobotAI, RobotInventory};
 use crate::components::plant::{Plant, Plantable, Harvestable};
-use crate::components::resource::{ResourceItem, ResourceType, Inventory};
+use crate::components::resource::{ResourceType, Inventory};
 use crate::components::player::Player;
-use crate::resources::world::{WorldMap, TileType};
+use crate::resources::world::WorldMap;
 use crate::systems::time::{GameTime, DayPhase};
 
 /// 生成机器人
@@ -13,29 +13,25 @@ pub fn spawn_robot(
     player_query: Query<&Transform, With<Player>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Digit1) {
-        if let Ok(player_transform) = player_query.get_single() {
-            let position = player_transform.translation;
-            spawn_robot_entity(&mut commands, RobotType::Harvester, position);
-            info!("生成了采集机器人");
-        }
+        let player_transform = player_query.single();
+        let position = player_transform.translation;
+        spawn_robot_entity(&mut commands, RobotType::Harvester, position);
+        info!("生成了采集机器人");
     } else if keyboard_input.just_pressed(KeyCode::Digit2) {
-        if let Ok(player_transform) = player_query.get_single() {
-            let position = player_transform.translation;
-            spawn_robot_entity(&mut commands, RobotType::Builder, position);
-            info!("生成了建造机器人");
-        }
+        let player_transform = player_query.single();
+        let position = player_transform.translation;
+        spawn_robot_entity(&mut commands, RobotType::Builder, position);
+        info!("生成了建造机器人");
     } else if keyboard_input.just_pressed(KeyCode::Digit3) {
-        if let Ok(player_transform) = player_query.get_single() {
-            let position = player_transform.translation;
-            spawn_robot_entity(&mut commands, RobotType::Defender, position);
-            info!("生成了防御机器人");
-        }
+        let player_transform = player_query.single();
+        let position = player_transform.translation;
+        spawn_robot_entity(&mut commands, RobotType::Defender, position);
+        info!("生成了防御机器人");
     } else if keyboard_input.just_pressed(KeyCode::Digit4) {
-        if let Ok(player_transform) = player_query.get_single() {
-            let position = player_transform.translation;
-            spawn_robot_entity(&mut commands, RobotType::Scout, position);
-            info!("生成了侦察机器人");
-        }
+        let player_transform = player_query.single();
+        let position = player_transform.translation;
+        spawn_robot_entity(&mut commands, RobotType::Scout, position);
+        info!("生成了侦察机器人");
     }
 }
 
@@ -70,6 +66,7 @@ pub fn robot_ai_system(
     mut query: Query<(Entity, &mut Robot, &RobotAI, &Transform, &mut RobotInventory)>,
     plant_query: Query<(Entity, &Plant, &Transform), (With<Plantable>, Without<Harvestable>)>,
     player_query: Query<&Transform, With<Player>>,
+    mut player_inventory: ResMut<Inventory>,
     mut commands: Commands,
 ) {
     // 夜晚机器人效率降低
@@ -113,7 +110,7 @@ pub fn robot_ai_system(
             RobotTask::Harvest => {
                 // 移动到目标位置
                 if let Some(target) = robot.target_position {
-                    move_towards_target(&mut transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_seconds());
+                    move_towards_target(&mut transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_secs());
 
                     // 检查是否到达目标
                     if transform.translation.truncate().distance(target) < 32.0 {
@@ -143,7 +140,7 @@ pub fn robot_ai_system(
             }
             RobotTask::Patrol => {
                 if let Some(target) = robot.target_position {
-                    move_towards_target(&mut transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_seconds());
+                    move_towards_target(&mut transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_secs());
 
                     if transform.translation.truncate().distance(target) < 10.0 {
                         robot.current_task = RobotTask::Idle;
@@ -153,25 +150,22 @@ pub fn robot_ai_system(
             }
             RobotTask::ReturnToBase => {
                 // 返回玩家位置
-                if let Ok(player_transform) = player_query.get_single() {
-                    let player_pos = player_transform.translation.truncate();
-                    move_towards_target(&mut transform, player_pos, robot.robot_type.movement_speed() * time.delta_seconds());
+                let player_transform = player_query.single();
+                let player_pos = player_transform.translation.truncate();
+                move_towards_target(&mut transform, player_pos, robot.robot_type.movement_speed() * time.delta_secs());
 
-                    if transform.translation.truncate().distance(player_pos) < 50.0 {
-                        // 卸载资源
-                        let amount = inventory.clear();
-                        if amount > 0 {
-                            if let Ok(mut player_inventory) = player_query.query::<&mut Inventory>().get_single_mut() {
-                                player_inventory.energy += amount;
-                                info!("机器人返回基地，卸载了 {} 能源", amount);
-                            }
-                        }
-
-                        // 充能
-                        robot.recharge(robot.max_energy);
-                        robot.current_task = RobotTask::Idle;
-                        robot.target_position = None;
+                if transform.translation.truncate().distance(player_pos) < 50.0 {
+                    // 卸载资源
+                    let amount = inventory.clear();
+                    if amount > 0 {
+                        player_inventory.energy += amount;
+                        info!("机器人返回基地，卸载了 {} 能源", amount);
                     }
+
+                    // 充能
+                    robot.recharge(robot.max_energy);
+                    robot.current_task = RobotTask::Idle;
+                    robot.target_position = None;
                 }
             }
             _ => {}

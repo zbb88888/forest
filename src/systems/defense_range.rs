@@ -7,9 +7,9 @@ pub struct DefenseRangePlugin;
 impl Plugin for DefenseRangePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_defense_ranges,
-            draw_defense_ranges,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            update_defense_ranges.run_if(in_state(crate::states::GameState::InGame)),
+            draw_defense_ranges.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 

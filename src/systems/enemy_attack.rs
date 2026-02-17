@@ -7,9 +7,9 @@ pub struct EnemyAttackPlugin;
 impl Plugin for EnemyAttackPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_enemy_attacks,
-            update_attack_effects,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            update_enemy_attacks.run_if(in_state(crate::states::GameState::InGame)),
+            update_attack_effects.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -64,51 +64,50 @@ fn update_enemy_attacks(
         }
 
         // 执行攻击
-        if let Ok((player_entity, player_transform)) = player_query.get_single() {
-            let distance = transform.translation.distance(player_transform.translation);
+        let (player_entity, player_transform) = player_query.single();
+        let distance = transform.translation.distance(player_transform.translation);
 
-            if distance <= enemy.stats.attack_range {
-                // 根据攻击类型执行攻击
-                match enemy.enemy_type.attack_type() {
-                    AttackType::Melee => {
-                        perform_melee_attack(
-                            &mut commands,
-                            &enemy,
-                            transform,
-                            player_entity,
-                            player_transform,
-                        );
-                    }
-                    AttackType::Laser => {
-                        perform_laser_attack(
-                            &mut commands,
-                            &enemy,
-                            transform,
-                            player_entity,
-                            player_transform,
-                        );
-                    }
-                    AttackType::Spit => {
-                        perform_spit_attack(
-                            &mut commands,
-                            &enemy,
-                            transform,
-                            player_transform,
-                        );
-                    }
-                    AttackType::Summon => {
-                        perform_summon_attack(&mut commands, &enemy, transform);
-                    }
-                    AttackType::None => {
-                        // 无攻击
-                    }
+        if distance <= enemy.stats.attack_range {
+            // 根据攻击类型执行攻击
+            match enemy.enemy_type.attack_type() {
+                AttackType::Melee => {
+                    perform_melee_attack(
+                        &mut commands,
+                        &enemy,
+                        transform,
+                        player_entity,
+                        player_transform,
+                    );
                 }
-
-                // 设置攻击冷却
-                enemy.attack_cooldown = 1.0 / enemy.stats.attack_speed;
-                status.is_attacking = true;
-                status.attack_timer = 1.0 / enemy.stats.attack_speed;
+                AttackType::Laser => {
+                    perform_laser_attack(
+                        &mut commands,
+                        &enemy,
+                        transform,
+                        player_entity,
+                        player_transform,
+                    );
+                }
+                AttackType::Spit => {
+                    perform_spit_attack(
+                        &mut commands,
+                        &enemy,
+                        transform,
+                        player_transform,
+                    );
+                }
+                AttackType::Summon => {
+                    perform_summon_attack(&mut commands, &enemy, transform);
+                }
+                AttackType::None => {
+                    // 无攻击
+                }
             }
+
+            // 设置攻击冷却
+            enemy.attack_cooldown = 1.0 / enemy.stats.attack_speed;
+            status.is_attacking = true;
+            status.attack_timer = 1.0 / enemy.stats.attack_speed;
         }
     }
 }
@@ -254,14 +253,14 @@ fn update_attack_effects(
 
         // 更新喷吐物位置
         if effect.attack_type == AttackType::Spit {
-            if let Some(projectile) = effect_query.get_component::<Projectile>(entity).ok() {
+            if let Some(projectile) = effect_query.get::<Projectile>(entity) {
                 transform.translation += projectile.direction * projectile.speed * time.delta_secs();
             }
         }
 
         // 淡出效果
         if effect.timer > effect.duration * 0.7 {
-            if let Some(mut sprite) = effect_query.get_component::<Sprite>(entity).ok() {
+            if let Some(mut sprite) = effect_query.get::<Sprite>(entity) {
                 sprite.color.set_alpha(1.0 - (effect.timer / effect.duration));
             }
         }

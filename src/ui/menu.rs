@@ -100,6 +100,6 @@ fn menu_action(
 
 fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<MenuRoot>>) {
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }

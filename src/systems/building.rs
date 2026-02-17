@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use crate::components::building::{
-    Building, BuildingType, BuildingStats, BuildingPosition, BuildingStatus,
-    Inventory, ResourceType
+    Building, BuildingType, Inventory, ResourceType
 };
-use crate::resources::world::{WorldMap, TileType};
+use crate::resources::world::WorldMap;
 
 /// 建筑建造系统插件
 pub struct BuildingPlugin;
@@ -12,10 +11,10 @@ impl Plugin for BuildingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Inventory>()
             .add_systems(Update, (
-                update_construction,
-                update_building_production,
-                update_building_function,
-            ).run_if(in_state(crate::states::GameState::InGame)));
+                update_construction.run_if(in_state(crate::states::GameState::InGame)),
+                update_building_production.run_if(in_state(crate::states::GameState::InGame)),
+                update_building_function.run_if(in_state(crate::states::GameState::InGame)),
+            ));
     }
 }
 

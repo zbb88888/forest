@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::components::achievement::{
-    Achievement, AchievementLog, AchievementStatus, AchievementCondition
+    Achievement, AchievementLog, AchievementCondition
 };
 
 /// 成就管理系统插件
@@ -9,9 +9,9 @@ pub struct AchievementManagerPlugin;
 impl Plugin for AchievementManagerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            check_achievements,
-            update_achievement_stats,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            check_achievements.run_if(in_state(crate::states::GameState::InGame)),
+            update_achievement_stats.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -24,7 +24,7 @@ fn check_achievements(
     time: Res<Time>,
 ) {
     // 获取玩家信息
-    let player_level = if let Ok(player) = player_query.get_single() {
+    let player_level = if let Ok(player) = player_query.single() {
         player.level
     } else {
         1
@@ -52,9 +52,8 @@ fn check_achievements(
             achievement.unlock();
 
             // 更新成就日志
-            if let Ok(mut log) = achievement_log_query.get_single_mut() {
-                log.unlock_achievement(achievement.id.clone(), achievement.points);
-            }
+            let mut log = achievement_log_query.single_mut();
+            log.unlock_achievement(achievement.id.clone(), achievement.points);
 
             info!("成就解锁: {} ({})", achievement.title, achievement.id);
         }
@@ -106,7 +105,7 @@ fn update_achievement_stats(
     let total_achievements = achievement_query.iter().len() as u32;
 
     // 获取已解锁成就数
-    let unlocked_count = if let Ok(log) = achievement_log_query.get_single() {
+    let unlocked_count = if let Ok(log) = achievement_log_query.single() {
         log.get_unlocked_count() as u32
     } else {
         0
@@ -116,14 +115,14 @@ fn update_achievement_stats(
     let total_points: u32 = achievement_query.iter().map(|a| a.points).sum();
 
     // 获取已获得成就点数
-    let earned_points = if let Ok(log) = achievement_log_query.get_single() {
+    let earned_points = if let Ok(log) = achievement_log_query.single() {
         log.total_points
     } else {
         0
     };
 
     // 更新统计
-    if let Ok(mut stats) = stats_query.get_single_mut() {
+    if let Ok(mut stats) = stats_query.single_mut() {
         stats.update(total_achievements, unlocked_count, total_points, earned_points);
     }
 }
@@ -162,7 +161,7 @@ pub fn get_achievement_progress(
     achievement_id: &str,
     achievement_query: &Query<&Achievement>,
 ) -> Option<f32> {
-    if let Ok(achievement) = achievement_query.get_single() {
+    if let Ok(achievement) = achievement_query.single() {
         if achievement.id == achievement_id {
             if achievement.is_unlocked() {
                 return Some(1.0);

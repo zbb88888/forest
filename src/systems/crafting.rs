@@ -17,9 +17,9 @@ impl Plugin for CraftingPlugin {
             .init_resource::<UpgradeOptimization>()
             .add_systems(Startup, initialize_recipes)
             .add_systems(Update, (
-                update_crafting_status,
-                check_crafting_conditions,
-            ).run_if(in_state(crate::states::GameState::InGame)));
+                update_crafting_status.run_if(in_state(crate::states::GameState::InGame)),
+                check_crafting_conditions.run_if(in_state(crate::states::GameState::InGame)),
+            ));
     }
 }
 

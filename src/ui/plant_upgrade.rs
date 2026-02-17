@@ -9,11 +9,11 @@ pub struct PlantUpgradeUIPlugin;
 impl Plugin for PlantUpgradeUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            toggle_plant_upgrade_panel,
-            update_plant_upgrade_panel,
-            handle_upgrade_button,
-            handle_unlock_button,
-        ).run_if(in_state(GameState::InGame)));
+            toggle_plant_upgrade_panel.run_if(in_state(GameState::InGame)),
+            update_plant_upgrade_panel.run_if(in_state(GameState::InGame)),
+            handle_upgrade_button.run_if(in_state(GameState::InGame)),
+            handle_unlock_button.run_if(in_state(GameState::InGame)),
+        ));
     }
 }
 
@@ -59,7 +59,7 @@ fn toggle_plant_upgrade_panel(
 
         // 清除现有面板
         for entity in existing_panel.iter() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
 
         if ui_state.is_visible {
@@ -110,10 +110,6 @@ fn spawn_plant_upgrade_panel(commands: &mut Commands) {
             // 升级按钮
             parent.spawn((
                 Button {
-                    width: Val::Px(280.0),
-                    height: Val::Px(40.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
                     ..default()
                 },
                 BackgroundColor(Color::srgb(0.2, 0.5, 0.2)),
@@ -166,10 +162,6 @@ fn spawn_plant_upgrade_panel(commands: &mut Commands) {
             // 解锁按钮
             parent.spawn((
                 Button {
-                    width: Val::Px(280.0),
-                    height: Val::Px(40.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
                     ..default()
                 },
                 BackgroundColor(Color::srgb(0.2, 0.2, 0.5)),

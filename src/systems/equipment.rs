@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::components::equipment::{Equipment, EquipmentType, EquipmentRarity, EquipmentBar, EquipmentSlot};
+use crate::components::equipment::{Equipment, EquipmentType, EquipmentRarity, EquipmentBar};
 use crate::components::player::Player;
 use crate::components::resource::Inventory;
 use rand::Rng;
@@ -11,22 +11,21 @@ pub fn spawn_random_equipment(
     player_query: Query<&Transform, With<Player>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyE) {
-        if let Ok(player_transform) = player_query.get_single() {
-            let position = player_transform.translation;
-            let equipment = generate_random_equipment();
+        let player_transform = player_query.single();
+        let position = player_transform.translation;
+        let equipment = generate_random_equipment();
 
-            commands.spawn((
-                Sprite {
-                    color: equipment.rarity.color(),
-                    custom_size: Some(Vec2::splat(20.0)),
-                    ..default()
-                },
-                Transform::from_xyz(position.x, position.y, 1.0),
-                equipment,
-            ));
+        commands.spawn((
+            Sprite {
+                color: equipment.rarity.color(),
+                custom_size: Some(Vec2::splat(20.0)),
+                ..default()
+            },
+            Transform::from_xyz(position.x, position.y, 1.0),
+            equipment,
+        ));
 
-            info!("生成了装备: {} ({})", equipment.equipment_type.name(), format_rarity(equipment.rarity));
-        }
+        info!("生成了装备: {} ({})", equipment.equipment_type.name(), format_rarity(equipment.rarity));
     }
 }
 
@@ -86,29 +85,27 @@ pub fn pickup_equipment(
         return;
     }
 
-    if let Ok(player_transform) = player_query.get_single() {
-        let pickup_range = 50.0;
-        let player_pos = player_transform.translation.truncate();
+    let player_transform = player_query.single();
+    let pickup_range = 50.0;
+    let player_pos = player_transform.translation.truncate();
 
-        for (entity, equipment, transform) in equipment_query.iter_mut() {
-            let distance = transform.translation.truncate().distance(player_pos);
+    for (entity, equipment, transform) in equipment_query.iter_mut() {
+        let distance = transform.translation.truncate().distance(player_pos);
 
-            if distance < pickup_range {
-                let slot = equipment.equipment_type.slot();
+        if distance < pickup_range {
+            let slot = equipment.equipment_type.slot();
 
-                if let Ok(mut equipment_bar) = player_equipment_bar.get_single_mut() {
-                    // 如果该槽位已有装备，先卸下
-                    if let Some(old_equipment) = equipment_bar.unequip(slot) {
-                        commands.entity(old_equipment).despawn();
-                    }
-
-                    // 装备新物品
-                    equipment_bar.equip(slot, entity);
-                    info!("装备了: {} ({})", equipment.equipment_type.name(), format_rarity(equipment.rarity));
-                }
-
-                break;
+            let mut equipment_bar = player_equipment_bar.single_mut();
+            // 如果该槽位已有装备，先卸下
+            if let Some(old_equipment) = equipment_bar.unequip(slot) {
+                commands.entity(old_equipment).despawn();
             }
+
+            // 装备新物品
+            equipment_bar.equip(slot, entity);
+            info!("装备了: {} ({})", equipment.equipment_type.name(), format_rarity(equipment.rarity));
+
+            break;
         }
     }
 }
@@ -126,20 +123,19 @@ pub fn upgrade_equipment(
 
     let upgrade_cost = 50;
 
-    if let Ok(mut inventory) = player_inventory.get_single_mut() {
-        if inventory.energy >= upgrade_cost {
-            // 升级第一个找到的装备
-            for (entity, mut equipment) in equipment_query.iter_mut() {
-                if equipment.level < 10 {
-                    equipment.upgrade();
-                    inventory.energy -= upgrade_cost;
-                    info!("升级了装备: {} (+{} 级)", equipment.equipment_type.name(), equipment.level);
-                    break;
-                }
+    let mut inventory = player_inventory.single_mut();
+    if inventory.energy >= upgrade_cost {
+        // 升级第一个找到的装备
+        for (entity, mut equipment) in equipment_query.iter_mut() {
+            if equipment.level < 10 {
+                equipment.upgrade();
+                inventory.energy -= upgrade_cost;
+                info!("升级了装备: {} (+{} 级)", equipment.equipment_type.name(), equipment.level);
+                break;
             }
-        } else {
-            info!("能量不足，无法升级装备");
         }
+    } else {
+        info!("能量不足，无法升级装备");
     }
 }
 
@@ -148,16 +144,15 @@ pub fn display_equipment_info(
     equipment_query: Query<&Equipment>,
     player_equipment_bar: Query<&EquipmentBar, With<Player>>,
 ) {
-    if let Ok(equipment_bar) = player_equipment_bar.get_single() {
-        let total_stats = equipment_bar.total_stats(&equipment_query);
+    let equipment_bar = player_equipment_bar.single();
+    let total_stats = equipment_bar.total_stats(&equipment_query);
 
-        info!("=== 装备属性 ===");
-        info!("伤害: {:.1}", total_stats.damage);
-        info!("攻击速度: {:.1}", total_stats.attack_speed);
-        info!("防御: {:.1}", total_stats.defense);
-        info!("能量加成: {:.1}", total_stats.energy_bonus);
-        info!("暴击率: {:.1}%", total_stats.crit_chance * 100.0);
-        info!("暴击倍率: {:.1}x", total_stats.crit_multiplier);
-        info!("===============");
-    }
+    info!("=== 装备属性 ===");
+    info!("伤害: {:.1}", total_stats.damage);
+    info!("攻击速度: {:.1}", total_stats.attack_speed);
+    info!("防御: {:.1}", total_stats.defense);
+    info!("能量加成: {:.1}", total_stats.energy_bonus);
+    info!("暴击率: {:.1}%", total_stats.crit_chance * 100.0);
+    info!("暴击倍率: {:.1}x", total_stats.crit_multiplier);
+    info!("===============");
 }

@@ -7,9 +7,9 @@ pub struct DefenseWallPlugin;
 impl Plugin for DefenseWallPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_defense_walls,
-            update_wall_health,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            update_defense_walls.run_if(in_state(crate::states::GameState::InGame)),
+            update_wall_health.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 

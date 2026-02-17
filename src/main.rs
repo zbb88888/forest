@@ -76,7 +76,7 @@ fn main() {
     }
 
     // Initialize state with default value
-    app.add_state(GameState::MainMenu)
+    app.init_state::<GameState>()
         .add_systems(Startup, setup)
         // Initialize game time and lighting
         .add_systems(Startup, systems::time::init_game_time)
@@ -131,7 +131,7 @@ fn main() {
             systems::equipment::pickup_equipment,
             systems::equipment::upgrade_equipment,
             systems::equipment::display_equipment_info,
-        ).run_if(in_state(GameState::InGame)))
+        ))
         .run();
 }
 

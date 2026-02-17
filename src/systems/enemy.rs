@@ -11,10 +11,10 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_enemy_ai,
-            update_enemy_movement,
-            update_enemy_attack,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            update_enemy_ai.run_if(in_state(crate::states::GameState::InGame)),
+            update_enemy_movement.run_if(in_state(crate::states::GameState::InGame)),
+            update_enemy_attack.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -31,98 +31,97 @@ fn update_enemy_ai(
     player_query: Query<&Transform, With<Player>>,
     world_map: Res<WorldMap>,
 ) {
-    if let Ok(player_transform) = player_query.get_single() {
-        let player_pos = player_transform.translation;
+    let player_transform = player_query.single();
+    let player_pos = player_transform.translation;
 
-        for (entity, mut enemy, mut status, transform, position) in enemy_query.iter_mut() {
-            if enemy.is_dead() {
-                enemy.ai_state = AIState::Dead;
-                continue;
-            }
+    for (entity, mut enemy, mut status, transform, position) in enemy_query.iter_mut() {
+        if enemy.is_dead() {
+            enemy.ai_state = AIState::Dead;
+            continue;
+        }
 
-            let enemy_pos = transform.translation;
-            let distance_to_player = enemy_pos.distance(player_pos);
+        let enemy_pos = transform.translation;
+        let distance_to_player = enemy_pos.distance(player_pos);
 
-            // 根据敌人类型和当前状态更新AI
-            let behavior = enemy.enemy_type.ai_behavior();
+        // 根据敌人类型和当前状态更新AI
+        let behavior = enemy.enemy_type.ai_behavior();
 
-            match behavior {
-                AIBehavior::Passive => {
-                    // 被动AI：不主动攻击，只在受到攻击时反击
-                    if status.is_attacking {
-                        enemy.ai_state = AIState::Attack;
-                    } else {
-                        enemy.ai_state = AIState::Idle;
-                    }
-                }
-
-                AIBehavior::Patrol => {
-                    // 巡逻AI：在区域内巡逻，发现玩家后追踪
-                    if distance_to_player <= enemy.stats.detection_range {
-                        enemy.ai_state = AIState::Chase;
-                        enemy.target = Some(player_query.single());
-                    } else {
-                        enemy.ai_state = AIState::Patrol;
-                        // 巡逻逻辑
-                        patrol_ai(&mut enemy, &time, &world_map, position);
-                    }
-                }
-
-                AIBehavior::Aggressive => {
-                    // 主动AI：主动攻击玩家
-                    if distance_to_player <= enemy.stats.detection_range {
-                        if distance_to_player <= enemy.stats.attack_range {
-                            enemy.ai_state = AIState::Attack;
-                            enemy.target = Some(player_query.single());
-                        } else {
-                            enemy.ai_state = AIState::Chase;
-                            enemy.target = Some(player_query.single());
-                        }
-                    } else {
-                        enemy.ai_state = AIState::Idle;
-                    }
-                }
-
-                AIBehavior::Guard => {
-                    // 守卫AI：保护特定区域
-                    if distance_to_player <= enemy.stats.detection_range {
-                        enemy.ai_state = AIState::Chase;
-                        enemy.target = Some(player_query.single());
-                    } else {
-                        enemy.ai_state = AIState::Idle;
-                        // 守卫逻辑：返回守卫位置
-                        guard_ai(&mut enemy, position);
-                    }
-                }
-
-                AIBehavior::Ranged => {
-                    // 远程AI：保持距离攻击
-                    if distance_to_player <= enemy.stats.detection_range {
-                        if distance_to_player <= enemy.stats.attack_range {
-                            enemy.ai_state = AIState::Attack;
-                            enemy.target = Some(player_query.single());
-                        } else if distance_to_player > enemy.stats.attack_range * 1.5 {
-                            enemy.ai_state = AIState::Chase;
-                            enemy.target = Some(player_query.single());
-                        } else {
-                            // 保持最佳攻击距离
-                            enemy.ai_state = AIState::Chase;
-                            enemy.target = Some(player_query.single());
-                        }
-                    } else {
-                        enemy.ai_state = AIState::Idle;
-                    }
-                }
-
-                AIBehavior::Boss => {
-                    // Boss AI：特殊行为
-                    boss_ai(&mut enemy, &mut status, distance_to_player, &player_query);
-                }
-
-                AIBehavior::Spawn => {
-                    // 生成AI：不移动，只生成其他敌人
+        match behavior {
+            AIBehavior::Passive => {
+                // 被动AI：不主动攻击，只在受到攻击时反击
+                if status.is_attacking {
+                    enemy.ai_state = AIState::Attack;
+                } else {
                     enemy.ai_state = AIState::Idle;
                 }
+            }
+
+            AIBehavior::Patrol => {
+                // 巡逻AI：在区域内巡逻，发现玩家后追踪
+                if distance_to_player <= enemy.stats.detection_range {
+                    enemy.ai_state = AIState::Chase;
+                    enemy.target = Some(player_entity);
+                } else {
+                    enemy.ai_state = AIState::Patrol;
+                    // 巡逻逻辑
+                    patrol_ai(&mut enemy, &time, &world_map, position);
+                }
+            }
+
+            AIBehavior::Aggressive => {
+                // 主动AI：主动攻击玩家
+                if distance_to_player <= enemy.stats.detection_range {
+                    if distance_to_player <= enemy.stats.attack_range {
+                        enemy.ai_state = AIState::Attack;
+                        enemy.target = Some(player_entity);
+                    } else {
+                        enemy.ai_state = AIState::Chase;
+                        enemy.target = Some(player_entity);
+                    }
+                } else {
+                    enemy.ai_state = AIState::Idle;
+                }
+            }
+
+            AIBehavior::Guard => {
+                // 守卫AI：保护特定区域
+                if distance_to_player <= enemy.stats.detection_range {
+                    enemy.ai_state = AIState::Chase;
+                    enemy.target = Some(player_entity);
+                } else {
+                    enemy.ai_state = AIState::Idle;
+                    // 守卫逻辑：返回守卫位置
+                    guard_ai(&mut enemy, position);
+                }
+            }
+
+            AIBehavior::Ranged => {
+                // 远程AI：保持距离攻击
+                if distance_to_player <= enemy.stats.detection_range {
+                    if distance_to_player <= enemy.stats.attack_range {
+                        enemy.ai_state = AIState::Attack;
+                        enemy.target = Some(player_entity);
+                    } else if distance_to_player > enemy.stats.attack_range * 1.5 {
+                        enemy.ai_state = AIState::Chase;
+                        enemy.target = Some(player_entity);
+                    } else {
+                        // 保持最佳攻击距离
+                        enemy.ai_state = AIState::Chase;
+                        enemy.target = Some(player_entity);
+                    }
+                } else {
+                    enemy.ai_state = AIState::Idle;
+                }
+            }
+
+            AIBehavior::Boss => {
+                // Boss AI：特殊行为
+                boss_ai(&mut enemy, &mut status, distance_to_player, &player_query);
+            }
+
+            AIBehavior::Spawn => {
+                // 生成AI：不移动，只生成其他敌人
+                enemy.ai_state = AIState::Idle;
             }
         }
     }
@@ -135,7 +134,7 @@ fn patrol_ai(enemy: &mut Enemy, time: &Time, world_map: &WorldMap, position: &En
     let patrol_radius = 5.0;
 
     // 使用时间作为随机种子
-    let seed = (time.elapsed_seconds() * 100.0) as u32;
+    let seed = (time.elapsed_secs() * 100.0) as u32;
     let random_direction = seed % 4;
 
     let (new_x, new_y) = match random_direction {
@@ -192,10 +191,10 @@ fn boss_ai(
     } else if distance_to_player <= enemy.stats.detection_range {
         if distance_to_player <= enemy.stats.attack_range {
             enemy.ai_state = AIState::Attack;
-            enemy.target = player_query.get_single().ok();
+            // Target will be set by the AI system
         } else {
             enemy.ai_state = AIState::Chase;
-            enemy.target = player_query.get_single().ok();
+            // Target will be set by the AI system
         }
     } else {
         enemy.ai_state = AIState::Idle;

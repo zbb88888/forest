@@ -9,11 +9,11 @@ pub struct CraftingUIPlugin;
 impl Plugin for CraftingUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            toggle_crafting_panel,
-            update_crafting_panel,
-            handle_recipe_button,
-            handle_upgrade_button,
-        ).run_if(in_state(GameState::InGame)));
+            toggle_crafting_panel.run_if(in_state(GameState::InGame)),
+            update_crafting_panel.run_if(in_state(GameState::InGame)),
+            handle_recipe_button.run_if(in_state(GameState::InGame)),
+            handle_upgrade_button.run_if(in_state(GameState::InGame)),
+        ));
     }
 }
 
@@ -52,7 +52,7 @@ fn toggle_crafting_panel(
 
         // 清除现有面板
         for entity in existing_panel.iter() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
 
         if ui_state.is_visible {

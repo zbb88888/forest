@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::Rng;
 
 /// 战斗系统组件
 

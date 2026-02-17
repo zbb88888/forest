@@ -8,10 +8,10 @@ pub struct EnemyBasePlugin;
 impl Plugin for EnemyBasePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_base_health,
-            update_base_spawning,
-            handle_base_destruction,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            update_base_health.run_if(in_state(crate::states::GameState::InGame)),
+            update_base_spawning.run_if(in_state(crate::states::GameState::InGame)),
+            handle_base_destruction.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -38,8 +38,6 @@ fn update_base_spawning(
     time: Res<Time>,
     mut base_query: Query<(Entity, &mut EnemyBase, &Transform)>,
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<Color>>,
 ) {
     for (entity, mut base, transform) in base_query.iter_mut() {
         if !base.active {
@@ -63,11 +61,11 @@ fn update_base_spawning(
             match base.base_type {
                 EnemyType::RobotFortress => {
                     // 机器人堡垒生成策略
-                    spawn_from_fortress(&mut commands, &mut meshes, &mut materials, &base, transform);
+                    spawn_from_fortress(&mut commands, &base, transform);
                 }
                 EnemyType::AIMotherBase => {
                     // AI母巢生成策略
-                    spawn_from_mother_base(&mut commands, &mut meshes, &mut materials, &base, transform);
+                    spawn_from_mother_base(&mut commands, &base, transform);
                 }
                 _ => {}
             }
@@ -81,8 +79,6 @@ fn update_base_spawning(
 /// 从机器人堡垒生成敌人
 fn spawn_from_fortress(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     base: &EnemyBase,
     transform: &Transform,
 ) {
@@ -105,7 +101,7 @@ fn spawn_from_fortress(
     let tile_x = ((transform.translation.x + offset_x) / tile_size).round() as u32;
     let tile_y = ((transform.translation.y + offset_y) / tile_size).round() as u32;
 
-    spawn_enemy_at(commands, meshes, materials, enemy_type, tile_x, tile_y);
+    spawn_enemy_at(commands, enemy_type, tile_x, tile_y);
 
     info!("从机器人堡垒生成: {:?} at ({}, {})", enemy_type, tile_x, tile_y);
 }
@@ -113,8 +109,6 @@ fn spawn_from_fortress(
 /// 从AI母巢生成敌人
 fn spawn_from_mother_base(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     base: &EnemyBase,
     transform: &Transform,
 ) {
@@ -137,7 +131,7 @@ fn spawn_from_mother_base(
     let tile_x = ((transform.translation.x + offset_x) / tile_size).round() as u32;
     let tile_y = ((transform.translation.y + offset_y) / tile_size).round() as u32;
 
-    spawn_enemy_at(commands, meshes, materials, enemy_type, tile_x, tile_y);
+    spawn_enemy_at(commands, enemy_type, tile_x, tile_y);
 
     info!("从AI母巢生成: {:?} at ({}, {})", enemy_type, tile_x, tile_y);
 }

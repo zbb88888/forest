@@ -180,7 +180,7 @@ impl Default for SaveSettings {
 }
 
 /// 存档组件
-#[derive(Debug, Clone, Component)]
+#[derive(Debug, Clone, Component, Resource)]
 pub struct SaveManager {
     pub settings: SaveSettings,
     pub last_auto_save: Option<f32>,

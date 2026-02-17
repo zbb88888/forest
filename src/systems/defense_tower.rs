@@ -11,11 +11,11 @@ pub struct DefenseTowerPlugin;
 impl Plugin for DefenseTowerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_defense_towers,
-            update_tower_attacks,
-            update_tower_rotation,
-            update_defense_stats,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            update_defense_towers.run_if(in_state(crate::states::GameState::InGame)),
+            update_tower_attacks.run_if(in_state(crate::states::GameState::InGame)),
+            update_tower_rotation.run_if(in_state(crate::states::GameState::InGame)),
+            update_defense_stats.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -65,7 +65,7 @@ fn update_tower_attacks(
 
         // 检查是否有目标
         if let Some(target) = tower.target {
-            if let Ok(target_transform) = enemy_query.get_component::<Transform>(target) {
+            if let Ok(target_transform) = enemy_query.get::<Transform>(target) {
                 // 计算距离
                 let distance = tower_transform.translation.distance(target_transform.translation);
                 if distance <= tower.stats.range {
@@ -99,7 +99,7 @@ fn perform_tower_attack(
     match tower.tower_type {
         DefenseTowerType::ArrowTower => {
             // 箭塔：物理伤害
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -107,14 +107,13 @@ fn perform_tower_attack(
                     damage_type: DamageType::Physical,
                     is_critical: false,
                 },
-                target_entity,
             );
             info!("箭塔攻击: 目标={:?}, 伤害={}", target_entity, tower.stats.damage);
         }
 
         DefenseTowerType::CannonTower => {
             // 炮塔：爆炸伤害
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -122,14 +121,13 @@ fn perform_tower_attack(
                     damage_type: DamageType::Explosive,
                     is_critical: false,
                 },
-                target_entity,
             );
             info!("炮塔攻击: 目标={:?}, 伤害={}", target_entity, tower.stats.damage);
         }
 
         DefenseTowerType::LaserTower => {
             // 激光塔：激光伤害
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -137,14 +135,13 @@ fn perform_tower_attack(
                     damage_type: DamageType::Laser,
                     is_critical: false,
                 },
-                target_entity,
             );
             info!("激光塔攻击: 目标={:?}, 伤害={}", target_entity, tower.stats.damage);
         }
 
         DefenseTowerType::IceTower => {
             // 冰塔：冰冻效果
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -152,7 +149,6 @@ fn perform_tower_attack(
                     damage_type: DamageType::Energy,
                     is_critical: false,
                 },
-                target_entity,
             );
 
             // 添加冰冻效果
@@ -164,7 +160,7 @@ fn perform_tower_attack(
 
         DefenseTowerType::PoisonTower => {
             // 毒塔：中毒效果
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -172,7 +168,6 @@ fn perform_tower_attack(
                     damage_type: DamageType::Corrosive,
                     is_critical: false,
                 },
-                target_entity,
             );
 
             // 添加中毒效果
@@ -184,7 +179,7 @@ fn perform_tower_attack(
 
         DefenseTowerType::ElectricTower => {
             // 电塔：眩晕效果
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -192,7 +187,6 @@ fn perform_tower_attack(
                     damage_type: DamageType::Energy,
                     is_critical: false,
                 },
-                target_entity,
             );
 
             // 添加眩晕效果
@@ -232,7 +226,7 @@ fn update_tower_rotation(
                 }
 
                 // 限制旋转速度
-                let max_rotation = tower.stats.rotation_speed * time.delta_seconds();
+                let max_rotation = tower.stats.rotation_speed * time.delta_secs();
                 let rotation = angle_diff.clamp(-max_rotation, max_rotation);
 
                 // 应用旋转
@@ -244,7 +238,7 @@ fn update_tower_rotation(
 
 /// 更新防御统计
 fn update_defense_stats(
-    mut damage_events: Event<DamageEvent>,
+    mut damage_events: EventReader<DamageEvent>,
     mut tower_query: Query<&mut DefenseStats>,
 ) {
     for event in damage_events.iter() {

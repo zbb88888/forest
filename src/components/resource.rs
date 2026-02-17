@@ -13,7 +13,7 @@ pub struct ResourceItem {
     pub amount: u32,
 }
 
-#[derive(Component, Default, Debug)]
+#[derive(Component, Resource, Default, Debug)]
 pub struct Inventory {
     pub metal: u32,
     pub soil: u32,

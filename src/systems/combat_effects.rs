@@ -9,11 +9,11 @@ pub struct CombatEffectsPlugin;
 impl Plugin for CombatEffectsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            spawn_damage_effects,
-            spawn_heal_effects,
-            spawn_death_effects,
-            update_combat_effect_visuals,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            spawn_damage_effects.run_if(in_state(crate::states::GameState::InGame)),
+            spawn_heal_effects.run_if(in_state(crate::states::GameState::InGame)),
+            spawn_death_effects.run_if(in_state(crate::states::GameState::InGame)),
+            update_combat_effect_visuals.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -108,9 +108,7 @@ impl CombatEffectVisual {
 /// 生成伤害效果
 fn spawn_damage_effects(
     mut commands: Commands,
-    mut damage_events: Event<DamageEvent>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<Color>>,
+    mut damage_events: EventReader<DamageEvent>,
 ) {
     for event in damage_events.iter() {
         // 获取目标位置
@@ -142,15 +140,13 @@ fn spawn_damage_effects(
         ));
 
         // 创建伤害粒子效果
-        spawn_damage_particles(&mut commands, &mut meshes, &mut materials, event);
+        spawn_damage_particles(&mut commands, event);
     }
 }
 
 /// 生成伤害粒子效果
 fn spawn_damage_particles(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     event: &DamageEvent,
 ) {
     let particle_count = if event.is_critical { 20 } else { 10 };
@@ -191,7 +187,7 @@ pub struct ParticleEffect {
 /// 生成治疗效果
 fn spawn_heal_effects(
     mut commands: Commands,
-    mut heal_events: Event<HealEvent>,
+    mut heal_events: EventReader<HealEvent>,
 ) {
     for event in heal_events.iter() {
         // 创建治疗数字效果
@@ -234,9 +230,7 @@ fn spawn_heal_effects(
 /// 生成死亡效果
 fn spawn_death_effects(
     mut commands: Commands,
-    mut death_events: Event<DeathEvent>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<Color>>,
+    mut death_events: EventReader<DeathEvent>,
 ) {
     for event in death_events.iter() {
         // 创建死亡粒子效果
@@ -283,7 +277,7 @@ fn update_combat_effect_visuals(
     mut effect_query: Query<(Entity, &mut CombatEffectVisual, &mut Transform)>,
 ) {
     for (entity, mut effect, mut transform) in effect_query.iter_mut() {
-        effect.timer += time.delta_seconds();
+        effect.timer += time.delta_secs();
 
         // 根据效果类型更新视觉效果
         match effect.effect_type {

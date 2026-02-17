@@ -73,7 +73,7 @@ impl CraftingRecipe {
     }
 
     /// 检查是否可以制造
-    pub fn can_craft(&self, inventory: &Inventory) -> bool {
+    pub fn can_craft(&self, inventory: &CraftingInventory) -> bool {
         if !self.unlocked {
             return false;
         }
@@ -100,7 +100,7 @@ impl CraftingRecipe {
 
 /// 材料库存
 #[derive(Debug, Clone, Default, Resource)]
-pub struct Inventory {
+pub struct CraftingInventory {
     pub energy: u32,
     pub metal: u32,
     pub soil: u32,
@@ -163,7 +163,7 @@ impl RecipeBook {
     }
 
     /// 获取可制造的配方
-    pub fn get_craftable_recipes(&self, inventory: &Inventory) -> Vec<&CraftingRecipe> {
+    pub fn get_craftable_recipes(&self, inventory: &CraftingInventory) -> Vec<&CraftingRecipe> {
         self.recipes
             .iter()
             .filter(|recipe| recipe.can_craft(inventory))
@@ -191,7 +191,7 @@ impl RecipeBook {
 }
 
 /// 制造品质控制
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Resource)]
 pub struct QualityControl {
     pub base_quality: f32,
     pub quality_variance: f32,
@@ -233,7 +233,7 @@ impl QualityControl {
 }
 
 /// 装备升级优化
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Resource)]
 pub struct UpgradeOptimization {
     pub upgrade_cost_multiplier: f32,
     pub upgrade_success_rate: f32,

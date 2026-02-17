@@ -8,9 +8,9 @@ impl Plugin for QuestGeneratorPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, initialize_main_quests)
             .add_systems(Update, (
-                generate_daily_quests,
-                generate_event_quests,
-            ).run_if(in_state(crate::states::GameState::InGame)));
+                generate_daily_quests.run_if(in_state(crate::states::GameState::InGame)),
+                generate_event_quests.run_if(in_state(crate::states::GameState::InGame)),
+            ));
     }
 }
 

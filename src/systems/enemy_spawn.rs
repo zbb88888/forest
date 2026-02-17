@@ -12,9 +12,9 @@ impl Plugin for EnemySpawnPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<EnemySpawnConfig>()
             .add_systems(Update, (
-                update_enemy_spawns,
-                update_base_spawns,
-            ).run_if(in_state(crate::states::GameState::InGame)));
+                update_enemy_spawns.run_if(in_state(crate::states::GameState::InGame)),
+                update_base_spawns.run_if(in_state(crate::states::GameState::InGame)),
+            ));
     }
 }
 
@@ -24,8 +24,6 @@ fn update_enemy_spawns(
     mut commands: Commands,
     mut enemy_query: Query<(Entity, &mut EnemyBase, &Transform)>,
     world_map: Res<WorldMap>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<Color>>,
 ) {
     for (entity, mut base, transform) in enemy_query.iter_mut() {
         if !base.active {
@@ -61,8 +59,6 @@ fn update_enemy_spawns(
                 // 创建敌人实体
                 spawn_enemy(
                     &mut commands,
-                    &mut meshes,
-                    &mut materials,
                     enemy_type,
                     tile_x,
                     tile_y,
@@ -123,8 +119,6 @@ fn calculate_spawn_position(
 /// 生成敌人实体
 fn spawn_enemy(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     enemy_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
@@ -159,8 +153,6 @@ fn update_base_spawns(
     time: Res<Time>,
     mut commands: Commands,
     world_map: Res<WorldMap>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<Color>>,
 ) {
     // 这里可以添加定期生成新基地的逻辑
     // 例如：每X分钟生成一个新的机器人堡垒或AI母巢
@@ -171,7 +163,7 @@ fn update_base_spawns(
     let map_height = world_map.height;
 
     // 使用时间作为随机种子
-    let seed = (time.elapsed_seconds() * 100.0) as u32;
+    let seed = (time.elapsed_secs() * 100.0) as u32;
     let mut rng = rand::thread_rng();
 
     // 随机选择边缘位置
@@ -198,8 +190,6 @@ fn update_base_spawns(
 
                 spawn_base(
                     &mut commands,
-                    &mut meshes,
-                    &mut materials,
                     base_type,
                     tile_x,
                     tile_y,
@@ -212,8 +202,6 @@ fn update_base_spawns(
 /// 生成基地实体
 fn spawn_base(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     base_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
@@ -248,23 +236,19 @@ fn spawn_base(
 /// 手动生成敌人（用于测试或事件触发）
 pub fn spawn_enemy_at(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     enemy_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
 ) {
-    spawn_enemy(commands, meshes, materials, enemy_type, tile_x, tile_y, None);
+    spawn_enemy(commands, enemy_type, tile_x, tile_y, None);
 }
 
 /// 手动生成基地（用于测试或事件触发）
 pub fn spawn_base_at(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     base_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
 ) {
-    spawn_base(commands, meshes, materials, base_type, tile_x, tile_y);
+    spawn_base(commands, base_type, tile_x, tile_y);
 }

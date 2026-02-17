@@ -11,11 +11,11 @@ impl Plugin for BuildingUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
             toggle_building_panel,
-            update_building_panel,
-            handle_place_button,
-            handle_upgrade_button,
-            handle_start_stop_button,
-        ).run_if(in_state(GameState::InGame)));
+            update_building_panel.run_if(in_state(GameState::InGame)),
+            handle_place_button.run_if(in_state(GameState::InGame)),
+            handle_upgrade_button.run_if(in_state(GameState::InGame)),
+            handle_start_stop_button.run_if(in_state(GameState::InGame)),
+        ));
     }
 }
 
@@ -55,7 +55,7 @@ fn toggle_building_panel(
 
         // 清除现有面板
         for entity in existing_panel.iter() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
 
         if ui_state.is_visible {

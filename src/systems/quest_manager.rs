@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::components::quest::{Quest, QuestLog, QuestStatus, QuestObjectiveType};
+use crate::components::quest::{Quest, QuestLog, QuestStatus};
 use crate::components::player::Player;
 
 /// 任务管理系统插件
@@ -8,10 +8,10 @@ pub struct QuestManagerPlugin;
 impl Plugin for QuestManagerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_quest_timers,
-            check_quest_completion,
-            update_quest_progress,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            update_quest_timers.run_if(in_state(crate::states::GameState::InGame)),
+            check_quest_completion.run_if(in_state(crate::states::GameState::InGame)),
+            update_quest_progress.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -40,9 +40,8 @@ fn check_quest_completion(
                 quest.complete();
 
                 // 更新任务日志
-                if let Ok(mut quest_log) = quest_log_query.get_single_mut() {
-                    quest_log.complete_quest(&quest.id);
-                }
+                let mut quest_log = quest_log_query.single_mut();
+                quest_log.complete_quest(&quest.id);
 
                 info!("任务自动完成: {}", quest.title);
             }
@@ -57,14 +56,14 @@ fn update_quest_progress(
     player_query: Query<&Player>,
 ) {
     // 获取玩家信息
-    let player_level = if let Ok(player) = player_query.get_single() {
+    let player_level = if let Ok(player) = player_query.single() {
         player.level
     } else {
         1
     };
 
     // 获取已完成任务列表
-    let completed_quests = if let Ok(quest_log) = quest_log_query.get_single() {
+    let completed_quests = if let Ok(quest_log) = quest_log_query.single() {
         quest_log.completed_quests.clone()
     } else {
         Vec::new()
@@ -161,7 +160,7 @@ pub fn get_quest_progress(
     quest_id: &str,
     quest_query: &Query<&Quest>,
 ) -> Option<Vec<(String, u32, u32)>> {
-    if let Ok(quest) = quest_query.get_single() {
+    if let Ok(quest) = quest_query.single() {
         if quest.id == quest_id {
             let progress = quest.objectives.iter().map(|obj| {
                 (

@@ -196,6 +196,6 @@ fn update_hud(
 
 fn cleanup_hud(mut commands: Commands, query: Query<Entity, With<HUDRoot>>) {
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }

@@ -178,10 +178,9 @@ pub fn harvest_plants(
                 harvest_stats.record_harvest(plant.plant_type);
 
                 // 添加资源到玩家背包
-                if let Ok(mut inventory) = player_inventory.get_single_mut() {
-                    inventory.energy += reward;
-                    info!("收获 {:?} 获得 {} 能源", plant.plant_type, reward);
-                }
+                let mut inventory = player_inventory.single_mut();
+                inventory.energy += reward;
+                info!("收获 {:?} 获得 {} 能源", plant.plant_type, reward);
 
                 // 生成资源掉落物
                 commands.spawn((

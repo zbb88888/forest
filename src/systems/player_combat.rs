@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use crate::components::combat::{
-    Combat, DamageType, DamageEvent, CombatEffectType
+    Combat, DamageEvent, CombatEffectType
 };
-use crate::components::player::Player;
+
 use crate::components::enemy::Enemy;
 
 /// 玩家战斗系统插件
@@ -11,9 +11,9 @@ pub struct PlayerCombatPlugin;
 impl Plugin for PlayerCombatPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            handle_player_attack,
-            update_player_combat,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            handle_player_attack.run_if(in_state(crate::states::GameState::InGame)),
+            update_player_combat.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -55,42 +55,41 @@ fn handle_player_attack(
     mut player_query: Query<(Entity, &mut Combat, &mut PlayerCombat, &Transform)>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
 ) {
-    if let Ok((player_entity, mut combat, mut player_combat, player_transform)) = player_query.get_single_mut() {
-        // 普通攻击
-        if mouse_input.just_pressed(MouseButton::Left) {
-            perform_player_attack(
-                &mut commands,
-                player_entity,
-                &mut combat,
-                &mut player_combat,
-                player_transform,
-                &enemy_query,
-            );
-        }
+    let (player_entity, mut combat, mut player_combat, player_transform) = player_query.single_mut();
+    // 普通攻击
+    if mouse_input.just_pressed(MouseButton::Left) {
+        perform_player_attack(
+            &mut commands,
+            player_entity,
+            &mut combat,
+            &mut player_combat,
+            player_transform,
+            &enemy_query,
+        );
+    }
 
-        // 特殊攻击
-        if keyboard_input.just_pressed(KeyCode::Space) {
-            perform_special_attack(
-                &mut commands,
-                player_entity,
-                &mut combat,
-                &mut player_combat,
-                player_transform,
-                &enemy_query,
-            );
-        }
+    // 特殊攻击
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        perform_special_attack(
+            &mut commands,
+            player_entity,
+            &mut combat,
+            &mut player_combat,
+            player_transform,
+            &enemy_query,
+        );
+    }
 
-        // 终极技能
-        if keyboard_input.just_pressed(KeyCode::KeyE) {
-            perform_ultimate_attack(
-                &mut commands,
-                player_entity,
-                &mut combat,
-                &mut player_combat,
-                player_transform,
-                &enemy_query,
-            );
-        }
+    // 终极技能
+    if keyboard_input.just_pressed(KeyCode::KeyE) {
+        perform_ultimate_attack(
+            &mut commands,
+            player_entity,
+            &mut combat,
+            &mut player_combat,
+            player_transform,
+            &enemy_query,
+        );
     }
 }
 
@@ -138,7 +137,7 @@ fn perform_player_attack(
         };
 
         // 发送伤害事件
-        commands.trigger_with(
+        commands.trigger(
             DamageEvent {
                 source: player_entity,
                 target,
@@ -146,7 +145,6 @@ fn perform_player_attack(
                 damage_type: combat.attack.damage_type,
                 is_critical,
             },
-            target,
         );
 
         // 更新攻击冷却
@@ -177,7 +175,7 @@ fn perform_special_attack(
     for (enemy_entity, enemy_transform) in enemy_query.iter() {
         let distance = player_transform.translation.distance(enemy_transform.translation);
         if distance <= attack_range {
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: player_entity,
                     target: enemy_entity,
@@ -185,7 +183,6 @@ fn perform_special_attack(
                     damage_type: combat.attack.damage_type,
                     is_critical: false,
                 },
-                enemy_entity,
             );
 
             // 添加减速效果
@@ -225,7 +222,7 @@ fn perform_ultimate_attack(
     for (enemy_entity, enemy_transform) in enemy_query.iter() {
         let distance = player_transform.translation.distance(enemy_transform.translation);
         if distance <= attack_range {
-            commands.trigger_with(
+            commands.trigger(
                 DamageEvent {
                     source: player_entity,
                     target: enemy_entity,
@@ -233,7 +230,6 @@ fn perform_ultimate_attack(
                     damage_type: combat.attack.damage_type,
                     is_critical: true,
                 },
-                enemy_entity,
             );
 
             // 添加眩晕效果
@@ -258,23 +254,22 @@ fn update_player_combat(
     time: Res<Time>,
     mut player_query: Query<&mut PlayerCombat>,
 ) {
-    if let Ok(mut player_combat) = player_query.get_single_mut() {
-        // 更新连击计时器
-        if player_combat.combo_timer > 0.0 {
-            player_combat.combo_timer -= time.delta_secs();
-            if player_combat.combo_timer <= 0.0 {
-                player_combat.combo_count = 0;
-            }
+    let mut player_combat = player_query.single_mut();
+    // 更新连击计时器
+    if player_combat.combo_timer > 0.0 {
+        player_combat.combo_timer -= time.delta_secs();
+        if player_combat.combo_timer <= 0.0 {
+            player_combat.combo_count = 0;
         }
+    }
 
-        // 更新特殊攻击冷却
-        if player_combat.special_attack_cooldown > 0.0 {
-            player_combat.special_attack_cooldown -= time.delta_secs();
-        }
+    // 更新特殊攻击冷却
+    if player_combat.special_attack_cooldown > 0.0 {
+        player_combat.special_attack_cooldown -= time.delta_secs();
+    }
 
-        // 更新终极技能冷却
-        if player_combat.ultimate_cooldown > 0.0 {
-            player_combat.ultimate_cooldown -= time.delta_secs();
-        }
+    // 更新终极技能冷却
+    if player_combat.ultimate_cooldown > 0.0 {
+        player_combat.ultimate_cooldown -= time.delta_secs();
     }
 }

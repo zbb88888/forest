@@ -11,9 +11,9 @@ impl Plugin for PlantUpgradePlugin {
         app.init_resource::<PlantVarietyTree>()
             .init_resource::<PlantHarvestStats>()
             .add_systems(Update, (
-                check_upgrade_conditions,
-                apply_upgrade_effects,
-            ).run_if(in_state(crate::states::GameState::InGame)));
+                check_upgrade_conditions.run_if(in_state(crate::states::GameState::InGame)),
+                apply_upgrade_effects.run_if(in_state(crate::states::GameState::InGame)),
+            ));
     }
 }
 

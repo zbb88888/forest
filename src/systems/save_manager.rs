@@ -10,8 +10,8 @@ pub struct SaveManagerPlugin;
 impl Plugin for SaveManagerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            handle_auto_save,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+            handle_auto_save.run_if(in_state(crate::states::GameState::InGame)),
+        ));
     }
 }
 
@@ -20,7 +20,7 @@ fn handle_auto_save(
     time: Res<Time>,
     mut save_manager_query: Query<&mut SaveManager>,
 ) {
-    if let Ok(mut save_manager) = save_manager_query.get_single_mut() {
+    if let Ok(mut save_manager) = save_manager_query.single_mut() {
         let current_time = time.elapsed_secs();
 
         if save_manager.should_auto_save(current_time) {
@@ -149,7 +149,7 @@ fn collect_player_data(world: &World) -> Result<PlayerData, String> {
         max_health: 100.0,
         position: (0.0, 0.0),
         inventory: Vec::new(),
-        equipment: crate::components::save::EquipmentData {
+        equipment: crate::components::equipment::EquipmentData {
             weapon: None,
             armor: None,
             accessory: None,

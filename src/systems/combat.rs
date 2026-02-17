@@ -17,11 +17,11 @@ impl Plugin for CombatPlugin {
             .add_systems(Update, (
                 update_combat_cooldowns,
                 process_damage_events,
-                process_heal_events,
-                process_death_events,
-                update_combat_effects,
-                update_combat_stats,
-            ).run_if(in_state(crate::states::GameState::InGame)));
+                process_heal_events.run_if(in_state(crate::states::GameState::InGame)),
+                process_death_events.run_if(in_state(crate::states::GameState::InGame)),
+                update_combat_effects.run_if(in_state(crate::states::GameState::InGame)),
+                update_combat_stats.run_if(in_state(crate::states::GameState::InGame)),
+            ));
     }
 }
 
@@ -32,7 +32,7 @@ fn update_combat_cooldowns(
 ) {
     for mut combat in combat_query.iter_mut() {
         if combat.attack_cooldown > 0.0 {
-            combat.attack_cooldown -= time.delta_seconds();
+            combat.attack_cooldown -= time.delta_secs();
         }
     }
 }
@@ -40,7 +40,7 @@ fn update_combat_cooldowns(
 /// 处理伤害事件
 fn process_damage_events(
     mut commands: Commands,
-    mut damage_events: Event<DamageEvent>,
+    mut damage_events: EventReader<DamageEvent>,
     mut combat_query: Query<&mut Combat>,
     mut enemy_query: Query<&mut Enemy>,
     mut player_query: Query<&mut Player>,
@@ -52,7 +52,7 @@ fn process_damage_events(
         // 处理目标伤害
         if let Ok(mut combat) = combat_query.get_mut(event.target) {
             // 更新战斗统计
-            if let Ok(mut stats) = combat_query.get_component::<CombatStats>(event.target) {
+            if let Ok(mut stats) = combat_query.get::<CombatStats>(event.target) {
                 stats.damage_taken += actual_damage;
             }
 
@@ -62,7 +62,7 @@ fn process_damage_events(
 
                 // 检查是否死亡
                 if enemy.is_dead() {
-                    commands.trigger_targets(DeathEvent { entity: event.target }, event.target);
+                    commands.trigger_targets(DeathEvent { entity: event.target });
                 }
             }
 
@@ -80,7 +80,7 @@ fn process_damage_events(
 
 /// 处理治疗事件
 fn process_heal_events(
-    mut heal_events: Event<HealEvent>,
+    mut heal_events: EventReader<HealEvent>,
     mut enemy_query: Query<&mut Enemy>,
 ) {
     for event in heal_events.iter() {
@@ -93,7 +93,7 @@ fn process_heal_events(
 
 /// 处理死亡事件
 fn process_death_events(
-    mut death_events: Event<DeathEvent>,
+    mut death_events: EventReader<DeathEvent>,
     mut commands: Commands,
     mut combat_query: Query<&mut CombatStats>,
 ) {
@@ -104,7 +104,7 @@ fn process_death_events(
         }
 
         // 移除死亡实体
-        commands.entity(event.entity).despawn_recursive();
+        commands.entity(event.entity).despawn();
 
         info!("死亡事件: {:?}", event.entity);
     }
@@ -117,39 +117,33 @@ fn update_combat_effects(
     mut effect_query: Query<(Entity, &mut CombatEffect, &mut Combat)>,
 ) {
     for (entity, mut effect, mut combat) in effect_query.iter_mut() {
-        effect.timer += time.delta_seconds();
+        effect.timer += time.delta_secs();
 
         // 应用效果
         match effect.effect_type {
             CombatEffectType::Burn => {
                 // 燃烧效果：持续伤害
-                if effect.timer % 1.0 < time.delta_seconds() {
+                if effect.timer % 1.0 < time.delta_secs() {
                     // 每秒造成伤害
-                    commands.trigger_targets(
-                        DamageEvent {
-                            source: entity,
-                            target: entity,
-                            damage: effect.value,
-                            damage_type: DamageType::Explosive,
-                            is_critical: false,
-                        },
-                        entity,
-                    );
+                    commands.trigger(DamageEvent {
+                        source: entity,
+                        target: entity,
+                        damage: effect.value,
+                        damage_type: DamageType::Explosive,
+                        is_critical: false,
+                    });
                 }
             }
             CombatEffectType::Poison => {
                 // 中毒效果：持续伤害
-                if effect.timer % 1.0 < time.delta_seconds() {
-                    commands.trigger_targets(
-                        DamageEvent {
-                            source: entity,
-                            target: entity,
-                            damage: effect.value,
-                            damage_type: DamageType::Corrosive,
-                            is_critical: false,
-                        },
-                        entity,
-                    );
+                if effect.timer % 1.0 < time.delta_secs() {
+                    commands.trigger(DamageEvent {
+                        source: entity,
+                        target: entity,
+                        damage: effect.value,
+                        damage_type: DamageType::Corrosive,
+                        is_critical: false,
+                    });
                 }
             }
             CombatEffectType::Slow => {
@@ -210,16 +204,13 @@ pub fn perform_attack(
     };
 
     // 发送伤害事件
-    commands.trigger_targets(
-        DamageEvent {
-            source,
-            target,
-            damage: final_damage,
-            damage_type: combat.attack.damage_type,
-            is_critical,
-        },
+    commands.trigger(DamageEvent {
+        source,
         target,
-    );
+        damage: final_damage,
+        damage_type: combat.attack.damage_type,
+        is_critical,
+    });
 
     // 更新攻击冷却
     // 实际实现需要修改combat组件
@@ -231,13 +222,10 @@ pub fn perform_heal(
     target: Entity,
     amount: f32,
 ) {
-    commands.trigger_targets(
-        HealEvent {
-            target,
-            amount,
-        },
+    commands.trigger(HealEvent {
         target,
-    );
+        amount,
+    });
 }
 
 /// 添加战斗效果
