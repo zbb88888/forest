@@ -221,7 +221,7 @@ fn update_enemy_movement(
         }
 
         let tile_size = 32.0;
-        let speed = enemy.stats.movement_speed * tile_size * time.delta_seconds();
+        let speed = enemy.stats.movement_speed * tile_size * time.delta_secs();
 
         match enemy.ai_state {
             AIState::Chase => {
@@ -260,7 +260,7 @@ fn update_enemy_attack(
 
         // 更新攻击冷却
         if enemy.attack_cooldown > 0.0 {
-            enemy.attack_cooldown -= time.delta_seconds();
+            enemy.attack_cooldown -= time.delta_secs();
         }
 
         match enemy.ai_state {

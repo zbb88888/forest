@@ -22,7 +22,7 @@ fn update_quest_timers(
 ) {
     for mut quest in quest_query.iter_mut() {
         if quest.status == QuestStatus::InProgress {
-            quest.update_time_limit(time.delta_seconds());
+            quest.update_time_limit(time.delta_secs());
         }
     }
 }

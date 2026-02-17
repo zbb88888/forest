@@ -9,7 +9,7 @@ use crate::systems::time::{GameTime, DayPhase};
 pub fn plant_seed(
     mut commands: Commands,
     world_map: Res<WorldMap>,
-    mouse_button_input: Res<Input<MouseButton>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
 ) {
@@ -111,7 +111,7 @@ pub fn grow_plants(
         } else {
             base_growth_rate * day_multiplier * plant.health
         };
-        growable.growth_progress += growth_rate * time.delta_seconds();
+        growable.growth_progress += growth_rate * time.delta_secs();
 
         // 更新植物状态
         plant.maturity = growable.growth_progress / growable.max_stages as f32;
@@ -133,8 +133,8 @@ pub fn grow_plants(
         }
 
         // 消耗水和营养
-        plant.water_level -= 0.01 * time.delta_seconds();
-        plant.nutrient_level -= 0.01 * time.delta_seconds();
+        plant.water_level -= 0.01 * time.delta_secs();
+        plant.nutrient_level -= 0.01 * time.delta_secs();
     }
 }
 
@@ -143,7 +143,7 @@ pub fn harvest_plants(
     mut commands: Commands,
     mut player_inventory: Query<&mut crate::components::resource::Inventory, With<crate::components::player::Player>>,
     mut harvest_stats: ResMut<crate::components::plant_upgrade::PlantHarvestStats>,
-    mouse_button_input: Res<Input<MouseButton>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     plants_query: Query<(Entity, &Plant, &Transform, Option<&PlantUpgrade>)>,
@@ -207,7 +207,7 @@ pub fn plant_decay(
 ) {
     for mut plant in query.iter_mut() {
         // 植物随时间自然衰减
-        plant.health -= 0.001 * time.delta_seconds();
+        plant.health -= 0.001 * time.delta_secs();
         plant.health = plant.health.max(0.0);
     }
 }

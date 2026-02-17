@@ -42,7 +42,7 @@ struct CraftingUIState {
 }
 
 fn toggle_crafting_panel(
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut ui_state: ResMut<CraftingUIState>,
     mut commands: Commands,
     existing_panel: Query<Entity, With<CraftingPanel>>,

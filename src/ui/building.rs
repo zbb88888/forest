@@ -45,7 +45,7 @@ struct BuildingUIState {
 }
 
 fn toggle_building_panel(
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut ui_state: ResMut<BuildingUIState>,
     mut commands: Commands,
     existing_panel: Query<Entity, With<BuildingPanel>>,

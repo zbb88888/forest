@@ -209,7 +209,7 @@ fn update_crafting_status(
 ) {
     for mut status in crafting_query.iter_mut() {
         if status.is_crafting {
-            status.progress += time.delta_seconds();
+            status.progress += time.delta_secs();
 
             if status.progress >= status.total_time {
                 status.is_crafting = false;

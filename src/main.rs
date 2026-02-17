@@ -75,7 +75,8 @@ fn main() {
         println!("Running in GRAPHICS mode");
     }
 
-    app.init_state::<GameState>()
+    // Initialize state with default value
+    app.add_state(GameState::MainMenu)
         .add_systems(Startup, setup)
         // Initialize game time and lighting
         .add_systems(Startup, systems::time::init_game_time)
@@ -137,7 +138,11 @@ fn main() {
 fn setup(mut commands: Commands) {
     // Camera is only needed in graphics mode
     if std::env::var("HEADLESS").is_err() {
-        commands.spawn(Camera2d::default());
+        commands.spawn((
+            Camera2d,
+            Transform::default(),
+            GlobalTransform::default(),
+        ));
     }
     println!("Dark Forest Initialized!");
 }

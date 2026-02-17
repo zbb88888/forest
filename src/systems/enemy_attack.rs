@@ -51,7 +51,7 @@ fn update_enemy_attacks(
 
         // 更新攻击计时器
         if status.attack_timer > 0.0 {
-            status.attack_timer -= time.delta_seconds();
+            status.attack_timer -= time.delta_secs();
             if status.attack_timer <= 0.0 {
                 status.is_attacking = false;
             }
@@ -59,7 +59,7 @@ fn update_enemy_attacks(
 
         // 检查攻击冷却
         if enemy.attack_cooldown > 0.0 {
-            enemy.attack_cooldown -= time.delta_seconds();
+            enemy.attack_cooldown -= time.delta_secs();
             continue;
         }
 
@@ -235,17 +235,15 @@ fn perform_summon_attack(
 
     // 创建召唤效果
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
+            Sprite {
                 color: Color::srgb(1.0, 0.5, 1.0),
                 custom_size: Some(Vec2::new(64.0, 64.0)),
                 ..default()
             },
-            transform: *enemy_transform,
-            ..default()
-        },
-        AttackEffect::new(0.0, 1.0, AttackType::Summon),
-    ));
+            Transform::from_translation(enemy_transform.translation),
+            GlobalTransform::default(),
+            AttackEffect::new(0.0, 1.0, AttackType::Summon),
+        ));
 
     // 实际召唤逻辑在生成系统中实现
     // 这里只创建视觉效果
@@ -258,12 +256,12 @@ fn update_attack_effects(
     mut effect_query: Query<(Entity, &mut AttackEffect, &mut Transform)>,
 ) {
     for (entity, mut effect, mut transform) in effect_query.iter_mut() {
-        effect.timer += time.delta_seconds();
+        effect.timer += time.delta_secs();
 
         // 更新喷吐物位置
         if effect.attack_type == AttackType::Spit {
             if let Some(projectile) = effect_query.get_component::<Projectile>(entity).ok() {
-                transform.translation += projectile.direction * projectile.speed * time.delta_seconds();
+                transform.translation += projectile.direction * projectile.speed * time.delta_secs();
             }
         }
 

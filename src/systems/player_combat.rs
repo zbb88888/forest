@@ -50,8 +50,8 @@ impl Default for PlayerCombat {
 /// 处理玩家攻击
 fn handle_player_attack(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
-    mouse_input: Res<Input<MouseButton>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut player_query: Query<(Entity, &mut Combat, &mut PlayerCombat, &Transform)>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
 ) {
@@ -81,7 +81,7 @@ fn handle_player_attack(
         }
 
         // 终极技能
-        if keyboard_input.just_pressed(KeyCode::E) {
+        if keyboard_input.just_pressed(KeyCode::KeyE) {
             perform_ultimate_attack(
                 &mut commands,
                 player_entity,
@@ -138,7 +138,7 @@ fn perform_player_attack(
         };
 
         // 发送伤害事件
-        commands.trigger_targets(
+        commands.trigger_with(
             DamageEvent {
                 source: player_entity,
                 target,
@@ -177,7 +177,7 @@ fn perform_special_attack(
     for (enemy_entity, enemy_transform) in enemy_query.iter() {
         let distance = player_transform.translation.distance(enemy_transform.translation);
         if distance <= attack_range {
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: player_entity,
                     target: enemy_entity,
@@ -225,7 +225,7 @@ fn perform_ultimate_attack(
     for (enemy_entity, enemy_transform) in enemy_query.iter() {
         let distance = player_transform.translation.distance(enemy_transform.translation);
         if distance <= attack_range {
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: player_entity,
                     target: enemy_entity,
@@ -261,7 +261,7 @@ fn update_player_combat(
     if let Ok(mut player_combat) = player_query.get_single_mut() {
         // 更新连击计时器
         if player_combat.combo_timer > 0.0 {
-            player_combat.combo_timer -= time.delta_seconds();
+            player_combat.combo_timer -= time.delta_secs();
             if player_combat.combo_timer <= 0.0 {
                 player_combat.combo_count = 0;
             }
@@ -269,12 +269,12 @@ fn update_player_combat(
 
         // 更新特殊攻击冷却
         if player_combat.special_attack_cooldown > 0.0 {
-            player_combat.special_attack_cooldown -= time.delta_seconds();
+            player_combat.special_attack_cooldown -= time.delta_secs();
         }
 
         // 更新终极技能冷却
         if player_combat.ultimate_cooldown > 0.0 {
-            player_combat.ultimate_cooldown -= time.delta_seconds();
+            player_combat.ultimate_cooldown -= time.delta_secs();
         }
     }
 }

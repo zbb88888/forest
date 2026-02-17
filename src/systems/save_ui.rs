@@ -24,7 +24,7 @@ pub struct SaveUIState {
 /// 更新存档UI
 fn update_save_ui(
     mut ui_state: ResMut<SaveUIState>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     // ESC键关闭存档菜单
     if keyboard_input.just_pressed(KeyCode::Escape) {

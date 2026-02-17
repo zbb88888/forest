@@ -35,7 +35,7 @@ fn handle_quest_progress_events(
     };
 
     // 处理每个进度事件
-    for event in events.iter() {
+    for event in events.read() {
         // 更新所有进行中的任务
         for mut quest in quest_query.iter_mut() {
             // 只更新进行中的任务

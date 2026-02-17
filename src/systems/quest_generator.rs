@@ -117,7 +117,7 @@ fn generate_daily_quests(
     mut last_generation: Local<Option<f32>>,
 ) {
     // 每24小时生成一次日常任务
-    let current_time = time.elapsed_seconds();
+    let current_time = time.elapsed_secs();
     let generation_interval = 24.0 * 60.0 * 60.0; // 24小时
 
     let should_generate = match *last_generation {
@@ -178,7 +178,7 @@ fn generate_event_quests(
     mut last_generation: Local<Option<f32>>,
 ) {
     // 每小时检查一次是否生成活动任务
-    let current_time = time.elapsed_seconds();
+    let current_time = time.elapsed_secs();
     let check_interval = 60.0 * 60.0; // 1小时
 
     let should_check = match *last_generation {

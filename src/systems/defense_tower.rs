@@ -32,7 +32,7 @@ fn update_defense_towers(
 
         // 更新攻击冷却
         if tower.attack_cooldown > 0.0 {
-            tower.attack_cooldown -= time.delta_seconds();
+            tower.attack_cooldown -= time.delta_secs();
         }
 
         // 寻找最近的敌人
@@ -99,7 +99,7 @@ fn perform_tower_attack(
     match tower.tower_type {
         DefenseTowerType::ArrowTower => {
             // 箭塔：物理伤害
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -114,7 +114,7 @@ fn perform_tower_attack(
 
         DefenseTowerType::CannonTower => {
             // 炮塔：爆炸伤害
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -129,7 +129,7 @@ fn perform_tower_attack(
 
         DefenseTowerType::LaserTower => {
             // 激光塔：激光伤害
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -144,7 +144,7 @@ fn perform_tower_attack(
 
         DefenseTowerType::IceTower => {
             // 冰塔：冰冻效果
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -164,7 +164,7 @@ fn perform_tower_attack(
 
         DefenseTowerType::PoisonTower => {
             // 毒塔：中毒效果
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -184,7 +184,7 @@ fn perform_tower_attack(
 
         DefenseTowerType::ElectricTower => {
             // 电塔：眩晕效果
-            commands.trigger_targets(
+            commands.trigger_with(
                 DamageEvent {
                     source: tower_entity,
                     target: target_entity,
@@ -218,7 +218,7 @@ fn update_tower_rotation(
                 let target_angle = direction.y.atan2(direction.x);
 
                 // 当前角度
-                let current_angle = transform.rotation.to_euler(EulerRot::Zyx).2;
+                let current_angle = transform.rotation.to_euler(EulerRot::ZYX).2;
 
                 // 计算角度差
                 let mut angle_diff = target_angle - current_angle;
@@ -273,15 +273,13 @@ pub fn create_defense_tower(
     };
 
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color,
-                custom_size: Some(Vec2::new(32.0, 32.0)),
-                ..default()
-            },
-            transform: Transform::from_xyz(position.x, position.y, 1.0),
+        Sprite {
+            color,
+            custom_size: Some(Vec2::new(32.0, 32.0)),
             ..default()
         },
+        Transform::from_xyz(position.x, position.y, 1.0),
+        GlobalTransform::default(),
         tower,
         DefenseStats::default(),
     )).id()

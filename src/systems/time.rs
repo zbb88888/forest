@@ -132,7 +132,7 @@ pub fn update_time(
     mut game_time: ResMut<GameTime>,
 ) {
     // 计算时间增量
-    let delta = time.delta_seconds();
+    let delta = time.delta_secs();
 
     // 计算游戏时间增量（实际秒数 / 一天的实际长度 * 24小时）
     let game_delta_hours = (delta / game_time.day_length) * 24.0;

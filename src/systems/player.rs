@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use crate::resources::world::WorldMap;
-use crate::components::player::{Player, PlayerBundle};
+use crate::components::player::Player;
 use crate::components::resource::Inventory;
+use crate::components::equipment::EquipmentBar;
 use rand::Rng;
 
 // Spawn player at map center
@@ -19,26 +20,26 @@ pub fn spawn_player(
     let pos_x = offset_x + center_x as f32 * tile_size;
     let pos_y = offset_y + center_y as f32 * tile_size;
 
-    commands.spawn(PlayerBundle {
-        player: Player {
+    // Bevy 0.18: Use Required Components tuple instead of Bundle
+    commands.spawn((
+        Player {
             id: 0,
             name: "Administrator".into(),
         },
-        inventory: Inventory {
+        Inventory {
             metal: 0,
             soil: 0,
             energy: 100, // Initial energy
         },
-        equipment_bar: EquipmentBar::default(),
-        // Bevy 0.18: Sprite component (Required components Transform/Visibility added automatically if using simple spawn,
-        // but since we use a Bundle, we must include them or use a tuple)
-        sprite: Sprite {
+        EquipmentBar::default(),
+        Sprite {
             color: Color::srgb(1.0, 0.0, 0.0), // Red player
             custom_size: Some(Vec2::splat(tile_size * 0.8)),
             ..default()
         },
-        transform: Transform::from_xyz(pos_x, pos_y, 1.0), // Z=1
-    });
+        Transform::from_xyz(pos_x, pos_y, 1.0), // Z=1
+        GlobalTransform::default(),
+    ));
     
     info!("Player spawned at ({}, {}) [World: {:.1}, {:.1}]", center_x, center_y, pos_x, pos_y);
 }

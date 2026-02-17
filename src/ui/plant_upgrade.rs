@@ -49,7 +49,7 @@ struct PlantUpgradeUIState {
 }
 
 fn toggle_plant_upgrade_panel(
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut ui_state: ResMut<PlantUpgradeUIState>,
     mut commands: Commands,
     existing_panel: Query<Entity, With<PlantUpgradePanel>>,

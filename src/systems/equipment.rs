@@ -7,7 +7,7 @@ use rand::Rng;
 /// 生成随机装备
 pub fn spawn_random_equipment(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyE) {
@@ -77,7 +77,7 @@ fn format_rarity(rarity: EquipmentRarity) -> &str {
 /// 拾取装备
 pub fn pickup_equipment(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<&Transform, With<Player>>,
     mut equipment_query: Query<(Entity, &Equipment, &Transform)>,
     mut player_equipment_bar: Query<&mut EquipmentBar, With<Player>>,
@@ -116,7 +116,7 @@ pub fn pickup_equipment(
 /// 升级装备
 pub fn upgrade_equipment(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut equipment_query: Query<(Entity, &mut Equipment)>,
     mut player_inventory: Query<&mut Inventory, With<Player>>,
 ) {

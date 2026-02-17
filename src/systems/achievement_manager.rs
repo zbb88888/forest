@@ -30,7 +30,7 @@ fn check_achievements(
         1
     };
 
-    let play_time = time.elapsed_seconds();
+    let play_time = time.elapsed_secs();
 
     // 检查每个成就
     for mut achievement in achievement_query.iter_mut() {

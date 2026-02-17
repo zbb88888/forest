@@ -21,7 +21,7 @@ fn handle_auto_save(
     mut save_manager_query: Query<&mut SaveManager>,
 ) {
     if let Ok(mut save_manager) = save_manager_query.get_single_mut() {
-        let current_time = time.elapsed_seconds();
+        let current_time = time.elapsed_secs();
 
         if save_manager.should_auto_save(current_time) {
             info!("触发自动存档");

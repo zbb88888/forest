@@ -52,7 +52,7 @@ fn handle_achievement_progress_events(
     };
 
     // 处理每个进度事件
-    for event in events.iter() {
+    for event in events.read() {
         // 更新所有相关成就
         for mut achievement in achievement_query.iter_mut() {
             // 跳过已解锁的成就

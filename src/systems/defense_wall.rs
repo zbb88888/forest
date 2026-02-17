@@ -26,7 +26,7 @@ fn update_defense_walls(
             spawn_wall_destruction(&mut commands, transform);
 
             // 移除墙体
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
 
             info!("防御墙被摧毁: 位置={:?}", transform.translation);
         }
@@ -55,15 +55,12 @@ fn spawn_wall_destruction(
         let lifetime = rand::random::<f32>() * 0.5 + 0.3;
 
         commands.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(0.5, 0.5, 0.5),
-                    custom_size: Some(Vec2::new(4.0, 4.0)),
-                    ..default()
-                },
-                transform: Transform::from_translation(transform.translation),
+            Sprite {
+                color: Color::srgb(0.5, 0.5, 0.5),
+                custom_size: Some(Vec2::new(4.0, 4.0)),
                 ..default()
             },
+            Transform::from_translation(transform.translation),
             WallDebris {
                 direction: Vec3::new(angle.cos(), angle.sin(), 0.0),
                 speed,
@@ -91,17 +88,15 @@ pub fn create_defense_wall(
     let wall = DefenseWall::new();
 
     commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::srgb(0.4, 0.4, 0.4),
-                custom_size: Some(Vec2::new(32.0, 32.0)),
-                ..default()
-            },
-            transform: Transform::from_xyz(position.x, position.y, 0.5),
+        Sprite {
+            color: Color::srgb(0.4, 0.4, 0.4),
+            custom_size: Some(Vec2::new(32.0, 32.0)),
             ..default()
         },
+        Transform::from_xyz(position.x, position.y, 0.5),
         wall,
         DefenseStats::default(),
+        GlobalTransform::default(),
     )).id()
 }
 

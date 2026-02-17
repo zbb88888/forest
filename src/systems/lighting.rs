@@ -41,10 +41,11 @@ pub fn update_lighting(
     // 更新相机的背景颜色（模拟昼夜变化）
     for mut camera in camera_query.iter_mut() {
         // 根据光照强度调整背景颜色的亮度
+        let light_srgba = light_color.to_srgba();
         let bg_color = Color::srgb(
-            light_color.r() * light_intensity,
-            light_color.g() * light_intensity,
-            light_color.b() * light_intensity,
+            light_srgba.red * light_intensity,
+            light_srgba.green * light_intensity,
+            light_srgba.blue * light_intensity,
         );
 
         // 注意：Bevy 0.18 中 Camera2d 可能没有直接设置背景颜色的方法

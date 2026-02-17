@@ -9,28 +9,28 @@ use crate::systems::time::{GameTime, DayPhase};
 /// 生成机器人
 pub fn spawn_robot(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::Key1) {
+    if keyboard_input.just_pressed(KeyCode::Digit1) {
         if let Ok(player_transform) = player_query.get_single() {
             let position = player_transform.translation;
             spawn_robot_entity(&mut commands, RobotType::Harvester, position);
             info!("生成了采集机器人");
         }
-    } else if keyboard_input.just_pressed(KeyCode::Key2) {
+    } else if keyboard_input.just_pressed(KeyCode::Digit2) {
         if let Ok(player_transform) = player_query.get_single() {
             let position = player_transform.translation;
             spawn_robot_entity(&mut commands, RobotType::Builder, position);
             info!("生成了建造机器人");
         }
-    } else if keyboard_input.just_pressed(KeyCode::Key3) {
+    } else if keyboard_input.just_pressed(KeyCode::Digit3) {
         if let Ok(player_transform) = player_query.get_single() {
             let position = player_transform.translation;
             spawn_robot_entity(&mut commands, RobotType::Defender, position);
             info!("生成了防御机器人");
         }
-    } else if keyboard_input.just_pressed(KeyCode::Key4) {
+    } else if keyboard_input.just_pressed(KeyCode::Digit4) {
         if let Ok(player_transform) = player_query.get_single() {
             let position = player_transform.translation;
             spawn_robot_entity(&mut commands, RobotType::Scout, position);
@@ -80,7 +80,7 @@ pub fn robot_ai_system(
 
     for (entity, mut robot, ai, transform, mut inventory) in query.iter_mut() {
         // 消耗能量
-        let energy_cost = robot.robot_type.energy_consumption() * time.delta_seconds();
+        let energy_cost = robot.robot_type.energy_consumption() * time.delta_secs();
         robot.consume_energy(energy_cost);
 
         // 如果能量不足，返回基地

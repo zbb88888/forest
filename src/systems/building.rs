@@ -26,7 +26,7 @@ fn update_construction(
 ) {
     for (mut status, building) in building_query.iter_mut() {
         if status.is_constructing {
-            status.construction_progress += time.delta_seconds() / building.stats.build_time;
+            status.construction_progress += time.delta_secs() / building.stats.build_time;
 
             if status.construction_progress >= 1.0 {
                 status.is_constructing = false;
@@ -45,7 +45,7 @@ fn update_building_production(
 ) {
     for (mut building, status) in building_query.iter_mut() {
         if !status.is_constructing && building.is_operational {
-            if let Some(resource_type) = building.produce(time.delta_seconds()) {
+            if let Some(resource_type) = building.produce(time.delta_secs()) {
                 match resource_type {
                     ResourceType::Energy => inventory.energy += 1,
                     ResourceType::Metal => inventory.metal += 1,

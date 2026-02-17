@@ -33,7 +33,7 @@ fn update_enemy_spawns(
         }
 
         // 更新生成计时器
-        base.spawn_timer += time.delta_seconds();
+        base.spawn_timer += time.delta_secs();
 
         // 检查是否可以生成
         if base.spawn_timer >= base.spawn_interval && base.can_spawn() {
