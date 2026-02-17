@@ -2,3 +2,4 @@ pub mod hud;
 pub mod menu;
 pub mod plant_upgrade;
 pub mod crafting;
+pub mod building;
