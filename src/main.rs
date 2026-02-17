@@ -14,7 +14,9 @@ use states::GameState;
 use ui::menu::MenuPlugin;
 use ui::hud::HUDPlugin;
 use ui::plant_upgrade::PlantUpgradeUIPlugin;
+use ui::crafting::CraftingUIPlugin;
 use systems::plant_upgrade::PlantUpgradePlugin;
+use systems::crafting::CraftingPlugin;
 
 fn main() {
     let is_headless = env::var("HEADLESS").is_ok();
@@ -61,6 +63,9 @@ fn main() {
         // Add plant upgrade system
         .add_plugins(PlantUpgradePlugin)
         .add_plugins(PlantUpgradeUIPlugin)
+        // Add crafting system
+        .add_plugins(CraftingPlugin)
+        .add_plugins(CraftingUIPlugin)
         // Move map and player setup to InGame state
         .add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
         // Run systems only in InGame state
