@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::ecs::event::EventReader;
 use crate::components::combat::{
     DamageEvent, HealEvent, DeathEvent, CombatEffect, CombatEffectType
 };
@@ -9,11 +10,11 @@ pub struct CombatEffectsPlugin;
 impl Plugin for CombatEffectsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            spawn_damage_effects.run_if(in_state(crate::states::GameState::InGame)),
-            spawn_heal_effects.run_if(in_state(crate::states::GameState::InGame)),
-            spawn_death_effects.run_if(in_state(crate::states::GameState::InGame)),
-            update_combat_effect_visuals.run_if(in_state(crate::states::GameState::InGame)),
-        ));
+            spawn_damage_effects,
+            spawn_heal_effects,
+            spawn_death_effects,
+            update_combat_effect_visuals,
+        ).run_if(in_state(crate::states::GameState::InGame)));
     }
 }
 

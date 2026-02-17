@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::ecs::event::{EventReader, EventWriter};
 use crate::components::combat::{
     Combat, DamageEvent, HealEvent, DeathEvent, CombatEffect, CombatEffectType,
     CombatStats, DamageType
@@ -52,9 +53,7 @@ fn process_damage_events(
         // 处理目标伤害
         if let Ok(mut combat) = combat_query.get_mut(event.target) {
             // 更新战斗统计
-            if let Ok(mut stats) = combat_query.get::<CombatStats>(event.target) {
-                stats.damage_taken += actual_damage;
-            }
+            combat.damage_taken += actual_damage;
 
             // 应用伤害到敌人
             if let Ok(mut enemy) = enemy_query.get_mut(event.target) {
@@ -62,7 +61,7 @@ fn process_damage_events(
 
                 // 检查是否死亡
                 if enemy.is_dead() {
-                    commands.trigger_targets(DeathEvent { entity: event.target });
+                    commands.trigger(DeathEvent { entity: event.target });
                 }
             }
 

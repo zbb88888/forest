@@ -8,10 +8,10 @@ pub struct EnemyBasePlugin;
 impl Plugin for EnemyBasePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_base_health.run_if(in_state(crate::states::GameState::InGame)),
-            update_base_spawning.run_if(in_state(crate::states::GameState::InGame)),
-            handle_base_destruction.run_if(in_state(crate::states::GameState::InGame)),
-        ));
+            update_base_health,
+            update_base_spawning,
+            handle_base_destruction,
+        ).run_if(in_state(crate::states::GameState::InGame)));
     }
 }
 
@@ -140,8 +140,6 @@ fn spawn_from_mother_base(
 fn handle_base_destruction(
     mut commands: Commands,
     mut base_query: Query<(Entity, &EnemyBase, &Transform)>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<Color>>,
 ) {
     for (entity, base, transform) in base_query.iter_mut() {
         // 检查基地是否被摧毁
@@ -158,8 +156,6 @@ fn handle_base_destruction(
 /// 初始化敌人大本营
 pub fn initialize_enemy_bases(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<Color>>,
     map_width: u32,
     map_height: u32,
 ) {
@@ -179,7 +175,7 @@ pub fn initialize_enemy_bases(
             _ => (0, 0),
         };
 
-        spawn_base_at(commands, meshes, materials, EnemyType::RobotFortress, tile_x, tile_y);
+        spawn_base_at(commands, EnemyType::RobotFortress, tile_x, tile_y);
     }
 
     // 在地图中心附近生成AI母巢
@@ -199,8 +195,6 @@ pub fn initialize_enemy_bases(
 
     spawn_base_at(
         commands,
-        meshes,
-        materials,
         EnemyType::AIMotherBase,
         mother_base_x.min(map_width - 1),
         mother_base_y.min(map_height - 1),

@@ -20,6 +20,18 @@ pub struct Inventory {
     pub energy: u32,
 }
 
+impl Inventory {
+    pub fn get_material(&self, material_type: crate::components::crafting::MaterialType) -> u32 {
+        match material_type {
+            crate::components::crafting::MaterialType::Energy => self.energy,
+            crate::components::crafting::MaterialType::Metal => self.metal,
+            crate::components::crafting::MaterialType::Soil => self.soil,
+            crate::components::crafting::MaterialType::Crystal => 0,
+            crate::components::crafting::MaterialType::Organic => 0,
+        }
+    }
+}
+
 #[derive(Component, Debug)]
 pub struct MetalShield {
     pub health: u32,

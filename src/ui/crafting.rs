@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use crate::states::GameState;
-use crate::components::crafting::{RecipeBook, Inventory, MaterialType};
+use crate::components::crafting::{RecipeBook, MaterialType};
 use crate::components::equipment::{EquipmentType, EquipmentRarity};
+use crate::components::resource::Inventory;
 use crate::systems::crafting::{start_crafting, upgrade_equipment};
 
 pub struct CraftingUIPlugin;
@@ -72,8 +73,10 @@ fn spawn_crafting_panel(commands: &mut Commands) {
                 height: Val::Px(500.0),
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
-                gap: Val::Px(10.0),
                 ..default()
+            },
+            Style {
+                gap: Val::Px(10.0),
             },
             BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.9)),
             CraftingPanel,
@@ -186,7 +189,8 @@ fn spawn_crafting_panel(commands: &mut Commands) {
 
             // 示例配方按钮
             parent.spawn((
-                Button {
+                Button,
+                Style {
                     width: Val::Px(380.0),
                     height: Val::Px(40.0),
                     justify_content: JustifyContent::Center,

@@ -13,22 +13,22 @@ pub fn spawn_robot(
     player_query: Query<&Transform, With<Player>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Digit1) {
-        let player_transform = player_query.single();
+        let Ok(player_transform) = player_query.single();
         let position = player_transform.translation;
         spawn_robot_entity(&mut commands, RobotType::Harvester, position);
         info!("生成了采集机器人");
     } else if keyboard_input.just_pressed(KeyCode::Digit2) {
-        let player_transform = player_query.single();
+        let Ok(player_transform) = player_query.single();
         let position = player_transform.translation;
         spawn_robot_entity(&mut commands, RobotType::Builder, position);
         info!("生成了建造机器人");
     } else if keyboard_input.just_pressed(KeyCode::Digit3) {
-        let player_transform = player_query.single();
+        let Ok(player_transform) = player_query.single();
         let position = player_transform.translation;
         spawn_robot_entity(&mut commands, RobotType::Defender, position);
         info!("生成了防御机器人");
     } else if keyboard_input.just_pressed(KeyCode::Digit4) {
-        let player_transform = player_query.single();
+        let Ok(player_transform) = player_query.single();
         let position = player_transform.translation;
         spawn_robot_entity(&mut commands, RobotType::Scout, position);
         info!("生成了侦察机器人");
@@ -150,7 +150,7 @@ pub fn robot_ai_system(
             }
             RobotTask::ReturnToBase => {
                 // 返回玩家位置
-                let player_transform = player_query.single();
+                let Ok(player_transform) = player_query.single();
                 let player_pos = player_transform.translation.truncate();
                 move_towards_target(&mut transform, player_pos, robot.robot_type.movement_speed() * time.delta_secs());
 

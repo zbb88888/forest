@@ -40,7 +40,7 @@ fn check_quest_completion(
                 quest.complete();
 
                 // 更新任务日志
-                let mut quest_log = quest_log_query.single_mut();
+                let Ok(mut quest_log) = quest_log_query.single_mut();
                 quest_log.complete_quest(&quest.id);
 
                 info!("任务自动完成: {}", quest.title);

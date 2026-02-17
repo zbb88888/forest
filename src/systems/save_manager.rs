@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::components::save::{
     SaveManager, SaveType, SaveStatus, SaveInfo, SaveData,
-    PlayerData, WorldData, QuestData, AchievementData
+    PlayerData, WorldData, QuestData, AchievementData, EquipmentData
 };
 
 /// 存档管理系统插件
@@ -149,7 +149,7 @@ fn collect_player_data(world: &World) -> Result<PlayerData, String> {
         max_health: 100.0,
         position: (0.0, 0.0),
         inventory: Vec::new(),
-        equipment: crate::components::equipment::EquipmentData {
+        equipment: EquipmentData {
             weapon: None,
             armor: None,
             accessory: None,

@@ -83,6 +83,7 @@ pub struct Combat {
     pub attack_cooldown: f32,
     pub is_attacking: bool,
     pub target: Option<Entity>,
+    pub damage_taken: f32,
 }
 
 impl Combat {
@@ -93,6 +94,7 @@ impl Combat {
             attack_cooldown: 0.0,
             is_attacking: false,
             target: None,
+            damage_taken: 0.0,
         }
     }
 

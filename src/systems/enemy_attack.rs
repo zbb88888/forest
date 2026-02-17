@@ -64,7 +64,7 @@ fn update_enemy_attacks(
         }
 
         // 执行攻击
-        let (player_entity, player_transform) = player_query.single();
+        let Ok((player_entity, player_transform)) = player_query.single();
         let distance = transform.translation.distance(player_transform.translation);
 
         if distance <= enemy.stats.attack_range {
@@ -253,14 +253,14 @@ fn update_attack_effects(
 
         // 更新喷吐物位置
         if effect.attack_type == AttackType::Spit {
-            if let Some(projectile) = effect_query.get::<Projectile>(entity) {
+            if let Ok((_, projectile)) = effect_query.get(entity) {
                 transform.translation += projectile.direction * projectile.speed * time.delta_secs();
             }
         }
 
         // 淡出效果
         if effect.timer > effect.duration * 0.7 {
-            if let Some(mut sprite) = effect_query.get::<Sprite>(entity) {
+            if let Ok((_, mut sprite)) = effect_query.get(entity) {
                 sprite.color.set_alpha(1.0 - (effect.timer / effect.duration));
             }
         }

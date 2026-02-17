@@ -79,8 +79,10 @@ fn spawn_plant_upgrade_panel(commands: &mut Commands) {
                 height: Val::Px(400.0),
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
-                gap: Val::Px(10.0),
                 ..default()
+            },
+            Style {
+                gap: Val::Px(10.0),
             },
             BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.9)),
             PlantUpgradePanel,
@@ -196,8 +198,8 @@ fn update_plant_upgrade_panel(
     }
 
     // 更新植物等级显示
-    if let Some(Ok(mut text)) = level_query.iter_mut().next() {
-        if let Some(Ok(upgrade)) = ui_state.selected_plant.and_then(|e| plant_query.get(e).ok()) {
+    if let Some(mut text) = level_query.iter_mut().next() {
+        if let Some(upgrade) = ui_state.selected_plant.and_then(|e| plant_query.get(e).ok()) {
             text.0 = format!("等级: {}", upgrade.level.value());
         } else {
             text.0 = "等级: 1".to_string();
@@ -205,7 +207,7 @@ fn update_plant_upgrade_panel(
     }
 
     // 更新品种信息
-    if let Some(Ok(mut text)) = variety_query.iter_mut().next() {
+    if let Some(mut text) = variety_query.iter_mut().next() {
         let varieties: Vec<String> = variety_tree.unlocked_varieties
             .iter()
             .map(|v| format!("{:?}", v))
@@ -214,7 +216,7 @@ fn update_plant_upgrade_panel(
     }
 
     // 更新收获统计
-    if let Some(Ok(mut text)) = harvest_query.iter_mut().next() {
+    if let Some(mut text) = harvest_query.iter_mut().next() {
         text.0 = format!("总收获次数: {}", harvest_stats.get_total_harvests());
     }
 }
@@ -248,7 +250,7 @@ fn handle_upgrade_button(
     // 更新升级按钮文本
     if let Some(selected) = ui_state.selected_plant {
         if let Ok(upgrade) = plant_query.get(selected) {
-            if let Some(Ok(mut text)) = upgrade_cost_query.iter_mut().next() {
+            if let Some(mut text) = upgrade_cost_query.iter_mut().next() {
                 let cost = upgrade.get_upgrade_cost();
                 if cost > 0 {
                     text.0 = format!("升级 ({} 能源)", cost);
@@ -294,7 +296,7 @@ fn handle_unlock_button(
     }
 
     // 更新解锁按钮文本
-    if let Some(Ok(mut text)) = unlock_cost_query.iter_mut().next() {
+    if let Some(mut text) = unlock_cost_query.iter_mut().next() {
         // 查找第一个未解锁的品种
         for plant_type in [crate::components::plant::PlantType::Bush, 
                          crate::components::plant::PlantType::Flower,

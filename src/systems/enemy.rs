@@ -28,10 +28,10 @@ fn update_enemy_ai(
         &Transform,
         &EnemyPosition
     )>,
-    player_query: Query<&Transform, With<Player>>,
+    player_query: Query<(Entity, &Transform), With<Player>>,
     world_map: Res<WorldMap>,
 ) {
-    let player_transform = player_query.single();
+    let Ok((player_entity, player_transform)) = player_query.single();
     let player_pos = player_transform.translation;
 
     for (entity, mut enemy, mut status, transform, position) in enemy_query.iter_mut() {

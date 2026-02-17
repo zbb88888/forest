@@ -108,7 +108,7 @@ pub struct CraftingInventory {
     pub organic: u32,
 }
 
-impl Inventory {
+impl CraftingInventory {
     /// 获取材料数量
     pub fn get_material(&self, material_type: MaterialType) -> u32 {
         match material_type {

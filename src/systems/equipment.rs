@@ -11,7 +11,7 @@ pub fn spawn_random_equipment(
     player_query: Query<&Transform, With<Player>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyE) {
-        let player_transform = player_query.single();
+        let Ok(player_transform) = player_query.single();
         let position = player_transform.translation;
         let equipment = generate_random_equipment();
 
@@ -85,7 +85,7 @@ pub fn pickup_equipment(
         return;
     }
 
-    let player_transform = player_query.single();
+    let Ok(player_transform) = player_query.single();
     let pickup_range = 50.0;
     let player_pos = player_transform.translation.truncate();
 
@@ -95,7 +95,7 @@ pub fn pickup_equipment(
         if distance < pickup_range {
             let slot = equipment.equipment_type.slot();
 
-            let mut equipment_bar = player_equipment_bar.single_mut();
+            let Ok(mut equipment_bar) = player_equipment_bar.single_mut();
             // 如果该槽位已有装备，先卸下
             if let Some(old_equipment) = equipment_bar.unequip(slot) {
                 commands.entity(old_equipment).despawn();
@@ -123,7 +123,7 @@ pub fn upgrade_equipment(
 
     let upgrade_cost = 50;
 
-    let mut inventory = player_inventory.single_mut();
+    let Ok(mut inventory) = player_inventory.single_mut();
     if inventory.energy >= upgrade_cost {
         // 升级第一个找到的装备
         for (entity, mut equipment) in equipment_query.iter_mut() {
@@ -144,7 +144,7 @@ pub fn display_equipment_info(
     equipment_query: Query<&Equipment>,
     player_equipment_bar: Query<&EquipmentBar, With<Player>>,
 ) {
-    let equipment_bar = player_equipment_bar.single();
+    let Ok(equipment_bar) = player_equipment_bar.single();
     let total_stats = equipment_bar.total_stats(&equipment_query);
 
     info!("=== 装备属性 ===");

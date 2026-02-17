@@ -18,7 +18,7 @@ pub fn plant_seed(
     }
 
     let window = windows.single();
-    let (camera, camera_transform) = cameras.single();
+    let Ok((camera, camera_transform)) = cameras.single();
 
     if let Some(world_position) = window.cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
@@ -128,7 +128,7 @@ pub fn grow_plants(
 
             // 如果达到最大阶段，添加可收获标记
             if growable.current_stage >= growable.max_stages {
-                commands.entity(plant.entity()).insert(Harvestable);
+                commands.entity(entity).insert(Harvestable);
             }
         }
 
@@ -153,7 +153,7 @@ pub fn harvest_plants(
     }
 
     let window = windows.single();
-    let (camera, camera_transform) = cameras.single();
+    let Ok((camera, camera_transform)) = cameras.single();
 
     if let Some(world_position) = window.cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
@@ -178,7 +178,7 @@ pub fn harvest_plants(
                 harvest_stats.record_harvest(plant.plant_type);
 
                 // 添加资源到玩家背包
-                let mut inventory = player_inventory.single_mut();
+                let Ok(mut inventory) = player_inventory.single_mut();
                 inventory.energy += reward;
                 info!("收获 {:?} 获得 {} 能源", plant.plant_type, reward);
 

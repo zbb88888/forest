@@ -284,9 +284,9 @@ impl QuestLog {
     /// 添加任务
     pub fn add_quest(&mut self, quest_id: String) {
         if !self.active_quests.contains(&quest_id) {
-            self.active_quests.push(quest_id);
+            self.active_quests.push(quest_id.clone());
             if self.current_quest.is_none() {
-                self.current_quest = Some(quest_id.clone());
+                self.current_quest = Some(quest_id);
             }
         }
     }

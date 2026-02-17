@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::ecs::event::EventReader;
 use crate::components::defense::{
     DefenseTower, DefenseTowerType, DefenseEffect, DefenseEffectType, DefenseStats
 };
@@ -65,7 +66,7 @@ fn update_tower_attacks(
 
         // 检查是否有目标
         if let Some(target) = tower.target {
-            if let Ok(target_transform) = enemy_query.get::<Transform>(target) {
+            if let Ok((_, target_transform)) = enemy_query.get(target) {
                 // 计算距离
                 let distance = tower_transform.translation.distance(target_transform.translation);
                 if distance <= tower.stats.range {

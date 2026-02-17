@@ -75,8 +75,10 @@ fn spawn_building_panel(commands: &mut Commands) {
                 height: Val::Px(500.0),
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
-                gap: Val::Px(10.0),
                 ..default()
+            },
+            Style {
+                gap: Val::Px(10.0),
             },
             BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.9)),
             BuildingPanel,
@@ -124,7 +126,8 @@ fn spawn_building_panel(commands: &mut Commands) {
 
             // 示例建筑按钮 - 能源收集器
             parent.spawn((
-                Button {
+                Button,
+                Style {
                     width: Val::Px(380.0),
                     height: Val::Px(40.0),
                     justify_content: JustifyContent::Center,
@@ -150,7 +153,8 @@ fn spawn_building_panel(commands: &mut Commands) {
 
             // 示例建筑按钮 - 金属矿
             parent.spawn((
-                Button {
+                Button,
+                Style {
                     width: Val::Px(380.0),
                     height: Val::Px(40.0),
                     justify_content: JustifyContent::Center,

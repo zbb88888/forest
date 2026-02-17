@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::components::building::{
-    Building, BuildingType, Inventory, ResourceType
+    Building, BuildingType, BuildingStatus, BuildingPosition, Inventory, ResourceType
 };
 use crate::resources::world::WorldMap;
 
