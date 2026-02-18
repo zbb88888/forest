@@ -18,9 +18,14 @@ pub struct PlayerRenderAssets {
 
 pub fn spawn_player(
     mut commands: Commands,
-    world_map: Res<WorldMap>,
+    world_map: Option<Res<WorldMap>>,
     assets: Res<PlayerRenderAssets>,
 ) {
+    let world_map = match world_map {
+        Some(wm) => wm,
+        None => return,
+    };
+
     let center_x = world_map.width / 2;
     let center_y = world_map.height / 2;
 
@@ -56,8 +61,13 @@ pub fn move_player_randomly(
     time: Res<Time>,
     mut timer: Local<Timer>,
     mut query: Query<(&Player, &mut Transform, &Inventory), Without<Enemy>>,
-    world_map: Res<WorldMap>,
+    world_map: Option<Res<WorldMap>>,
 ) {
+    let world_map = match world_map {
+        Some(wm) => wm,
+        None => return,
+    };
+
     if timer.duration() == std::time::Duration::ZERO {
         *timer = Timer::from_seconds(1.0, TimerMode::Repeating);
     }

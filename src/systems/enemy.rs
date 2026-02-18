@@ -29,8 +29,13 @@ fn update_enemy_ai(
         &EnemyPosition
     ), Without<Player>>,
     player_query: Query<(Entity, &Transform), (With<Player>, Without<Enemy>)>,
-    world_map: Res<WorldMap>,
+    world_map: Option<Res<WorldMap>>,
 ) {
+    let world_map = match world_map {
+        Some(wm) => wm,
+        None => return,
+    };
+
     let Ok((player_entity, player_transform)) = player_query.single() else { return; };
     let player_pos = player_transform.translation;
 

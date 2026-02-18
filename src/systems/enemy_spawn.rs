@@ -35,9 +35,14 @@ fn update_enemy_spawns(
     time: Res<Time>,
     mut commands: Commands,
     mut enemy_query: Query<(Entity, &mut EnemyBase, &Transform), Without<Player>>,
-    world_map: Res<WorldMap>,
+    world_map: Option<Res<WorldMap>>,
     assets: Res<EnemyRenderAssets>,
 ) {
+    let world_map = match world_map {
+        Some(wm) => wm,
+        None => return,
+    };
+
     let mut rng = rand::thread_rng();
 
     for (entity, mut base, transform) in enemy_query.iter_mut() {
@@ -88,9 +93,14 @@ fn update_enemy_spawns(
 fn update_base_spawns(
     time: Res<Time>,
     mut commands: Commands,
-    world_map: Res<WorldMap>,
+    world_map: Option<Res<WorldMap>>,
     assets: Res<EnemyRenderAssets>,
 ) {
+    let world_map = match world_map {
+        Some(wm) => wm,
+        None => return,
+    };
+
     let mut rng = rand::thread_rng();
 
     if rng.gen_bool(0.01) {

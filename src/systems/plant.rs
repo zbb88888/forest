@@ -6,14 +6,28 @@ use crate::components::player::Player;
 use crate::resources::world::{WorldMap, TileType};
 use crate::systems::time::{GameTime, DayPhase};
 
+pub struct PlantPlugin;
+
+impl Plugin for PlantPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<crate::components::plant_upgrade::PlantHarvestStats>();
+        app.add_systems(Update, (plant_seed, grow_plants, harvest_plants, plant_decay));
+    }
+}
+
 /// 种植植物
 pub fn plant_seed(
     mut commands: Commands,
-    world_map: Res<WorldMap>,
+    world_map: Option<Res<WorldMap>>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
 ) {
+    let world_map = match world_map {
+        Some(wm) => wm,
+        None => return,
+    };
+
     if !mouse_button_input.just_pressed(MouseButton::Right) {
         return;
     }

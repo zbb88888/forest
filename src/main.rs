@@ -13,79 +13,163 @@ use ui::hud::HUDPlugin;
 use ui::plant_upgrade::PlantUpgradeUIPlugin;
 use ui::crafting::CraftingUIPlugin;
 use ui::building::BuildingUIPlugin;
-use systems::plant_upgrade::PlantUpgradePlugin;
-use systems::crafting::CraftingPlugin;
-use systems::building::BuildingPlugin;
-use systems::enemy::EnemyPlugin;
-use systems::enemy_spawn::{EnemySpawnPlugin, init_enemy_assets, EnemyRenderAssets};
-use systems::enemy_attack::EnemyAttackPlugin;
-use systems::enemy_base::EnemyBasePlugin;
-use systems::combat::CombatPlugin;
-use systems::player_combat::PlayerCombatPlugin;
-use systems::combat_effects::CombatEffectsPlugin;
-use systems::defense_tower::DefenseTowerPlugin;
-use systems::defense_wall::DefenseWallPlugin;
-use systems::defense_range::DefenseRangePlugin;
-use systems::quest_manager::QuestManagerPlugin;
-use systems::quest_events::QuestEventsPlugin;
-use systems::quest_generator::QuestGeneratorPlugin;
-use systems::achievement_manager::AchievementManagerPlugin;
-use systems::achievement_events::AchievementEventsPlugin;
-use systems::achievement_generator::AchievementGeneratorPlugin;
-use systems::save_manager::SaveManagerPlugin;
-use systems::save_ui::SaveUIPlugin;
 use systems::map::{init_map_assets, MapRenderAssets};
 use systems::player::{init_player_assets, PlayerRenderAssets};
+use systems::enemy_spawn::{EnemySpawnPlugin, init_enemy_assets, EnemyRenderAssets};
 
 fn main() {
     std::panic::set_hook(Box::new(|info| {
         eprintln!("PANIC: {}", info);
     }));
 
-    App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Dark Forest".into(),
-                resolution: (1280, 720).into(),
-                ..default()
-            }),
+    let layer = std::env::var("LAYER")
+        .unwrap_or_default()
+        .parse::<u32>()
+        .unwrap_or(6);
+
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Dark Forest".into(),
+            resolution: (1280, 720).into(),
             ..default()
-        }))
-        .add_plugins((MenuPlugin, HUDPlugin))
-        .init_state::<GameState>()
-        .add_systems(Startup, |mut next_state: ResMut<NextState<GameState>>| {
-            next_state.set(GameState::InGame);
-        })
-        .add_systems(Startup, setup)
-        .add_systems(Startup, init_render_assets)
-        .add_systems(Startup, systems::time::init_game_time)
-        .add_systems(Startup, systems::lighting::init_lighting)
-        .add_plugins(PlantUpgradePlugin)
-        .add_plugins(PlantUpgradeUIPlugin)
-        .add_plugins(CraftingPlugin)
-        .add_plugins(CraftingUIPlugin)
-        .add_plugins(BuildingPlugin)
-        .add_plugins(BuildingUIPlugin)
-        .add_plugins(EnemyPlugin)
-        .add_plugins(EnemySpawnPlugin)
-        .add_plugins(EnemyAttackPlugin)
-        .add_plugins(EnemyBasePlugin)
-        .add_plugins(CombatPlugin)
-        .add_plugins(PlayerCombatPlugin)
-        .add_plugins(CombatEffectsPlugin)
-        .add_plugins(DefenseTowerPlugin)
-        .add_plugins(DefenseWallPlugin)
-        .add_plugins(DefenseRangePlugin)
-        .add_plugins(QuestManagerPlugin)
-        .add_plugins(QuestEventsPlugin)
-        .add_plugins(QuestGeneratorPlugin)
-        .add_plugins(AchievementManagerPlugin)
-        .add_plugins(AchievementEventsPlugin)
-        .add_plugins(AchievementGeneratorPlugin)
-        .add_plugins(SaveManagerPlugin)
-        .add_plugins(SaveUIPlugin)
-        .add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
-        .run();
+        }),
+        ..default()
+    }))
+    .add_plugins((MenuPlugin, HUDPlugin))
+    .init_state::<GameState>()
+    .add_systems(Startup, |mut next_state: ResMut<NextState<GameState>>| {
+        next_state.set(GameState::InGame);
+    })
+    .add_systems(Startup, setup)
+    .add_systems(Startup, init_render_assets)
+    .add_systems(Startup, systems::time::init_game_time)
+    .add_systems(Startup, systems::lighting::init_lighting);
+
+    match layer {
+        0 => {
+            info!("Running Layer 0: Pure Map");
+        }
+        1 => {
+            info!("Running Layer 1: Entity Spawning");
+            app.add_plugins(EnemySpawnPlugin);
+            app.add_plugins(systems::enemy_base::EnemyBasePlugin);
+            app.add_plugins(systems::plant::PlantPlugin);
+        }
+        2 => {
+            info!("Running Layer 2: Entity Behavior");
+            app.add_plugins(EnemySpawnPlugin);
+            app.add_plugins(systems::enemy_base::EnemyBasePlugin);
+            app.add_plugins(systems::plant::PlantPlugin);
+            app.add_plugins(systems::enemy::EnemyPlugin);
+            app.add_plugins(systems::robot::RobotPlugin);
+            app.add_plugins(systems::equipment::EquipmentPlugin);
+        }
+        3 => {
+            info!("Running Layer 3: Combat System");
+            app.add_plugins(EnemySpawnPlugin);
+            app.add_plugins(systems::enemy_base::EnemyBasePlugin);
+            app.add_plugins(systems::plant::PlantPlugin);
+            app.add_plugins(systems::enemy::EnemyPlugin);
+            app.add_plugins(systems::robot::RobotPlugin);
+            app.add_plugins(systems::equipment::EquipmentPlugin);
+            app.add_plugins(systems::enemy_attack::EnemyAttackPlugin);
+            app.add_plugins(systems::player_combat::PlayerCombatPlugin);
+            app.add_plugins(systems::combat::CombatPlugin);
+            app.add_plugins(systems::combat_effects::CombatEffectsPlugin);
+            app.add_plugins(systems::defense_tower::DefenseTowerPlugin);
+            app.add_plugins(systems::defense_wall::DefenseWallPlugin);
+            app.add_plugins(systems::defense_range::DefenseRangePlugin);
+        }
+        4 => {
+            info!("Running Layer 4: Production & Building");
+            app.add_plugins(EnemySpawnPlugin);
+            app.add_plugins(systems::enemy_base::EnemyBasePlugin);
+            app.add_plugins(systems::plant::PlantPlugin);
+            app.add_plugins(systems::enemy::EnemyPlugin);
+            app.add_plugins(systems::robot::RobotPlugin);
+            app.add_plugins(systems::equipment::EquipmentPlugin);
+            app.add_plugins(systems::enemy_attack::EnemyAttackPlugin);
+            app.add_plugins(systems::player_combat::PlayerCombatPlugin);
+            app.add_plugins(systems::combat::CombatPlugin);
+            app.add_plugins(systems::combat_effects::CombatEffectsPlugin);
+            app.add_plugins(systems::defense_tower::DefenseTowerPlugin);
+            app.add_plugins(systems::defense_wall::DefenseWallPlugin);
+            app.add_plugins(systems::defense_range::DefenseRangePlugin);
+            app.add_plugins(systems::plant_upgrade::PlantUpgradePlugin);
+            app.add_plugins(PlantUpgradeUIPlugin);
+            app.add_plugins(systems::crafting::CraftingPlugin);
+            app.add_plugins(CraftingUIPlugin);
+            app.add_plugins(systems::building::BuildingPlugin);
+            app.add_plugins(BuildingUIPlugin);
+        }
+        50 => {
+            info!("Running Layer 50: Quest & Achievement");
+            app.add_plugins(EnemySpawnPlugin);
+            app.add_plugins(systems::enemy_base::EnemyBasePlugin);
+            app.add_plugins(systems::plant::PlantPlugin);
+            app.add_plugins(systems::enemy::EnemyPlugin);
+            app.add_plugins(systems::robot::RobotPlugin);
+            app.add_plugins(systems::equipment::EquipmentPlugin);
+            app.add_plugins(systems::enemy_attack::EnemyAttackPlugin);
+            app.add_plugins(systems::player_combat::PlayerCombatPlugin);
+            app.add_plugins(systems::combat::CombatPlugin);
+            app.add_plugins(systems::combat_effects::CombatEffectsPlugin);
+            app.add_plugins(systems::defense_tower::DefenseTowerPlugin);
+            app.add_plugins(systems::defense_wall::DefenseWallPlugin);
+            app.add_plugins(systems::defense_range::DefenseRangePlugin);
+            app.add_plugins(systems::plant_upgrade::PlantUpgradePlugin);
+            app.add_plugins(PlantUpgradeUIPlugin);
+            app.add_plugins(systems::crafting::CraftingPlugin);
+            app.add_plugins(CraftingUIPlugin);
+            app.add_plugins(systems::building::BuildingPlugin);
+            app.add_plugins(BuildingUIPlugin);
+            app.add_plugins(systems::quest_manager::QuestManagerPlugin);
+            app.add_plugins(systems::quest_events::QuestEventsPlugin);
+            app.add_plugins(systems::quest_generator::QuestGeneratorPlugin);
+            app.add_plugins(systems::achievement_manager::AchievementManagerPlugin);
+            app.add_plugins(systems::achievement_events::AchievementEventsPlugin);
+            app.add_plugins(systems::achievement_generator::AchievementGeneratorPlugin);
+        }
+        999 => {
+            info!("Running Layer 999: Full System (Save/Load)");
+            app.add_plugins(EnemySpawnPlugin);
+            app.add_plugins(systems::enemy_base::EnemyBasePlugin);
+            app.add_plugins(systems::plant::PlantPlugin);
+            app.add_plugins(systems::enemy::EnemyPlugin);
+            app.add_plugins(systems::robot::RobotPlugin);
+            app.add_plugins(systems::equipment::EquipmentPlugin);
+            app.add_plugins(systems::enemy_attack::EnemyAttackPlugin);
+            app.add_plugins(systems::player_combat::PlayerCombatPlugin);
+            app.add_plugins(systems::combat::CombatPlugin);
+            app.add_plugins(systems::combat_effects::CombatEffectsPlugin);
+            app.add_plugins(systems::defense_tower::DefenseTowerPlugin);
+            app.add_plugins(systems::defense_wall::DefenseWallPlugin);
+            app.add_plugins(systems::defense_range::DefenseRangePlugin);
+            app.add_plugins(systems::plant_upgrade::PlantUpgradePlugin);
+            app.add_plugins(PlantUpgradeUIPlugin);
+            app.add_plugins(systems::crafting::CraftingPlugin);
+            app.add_plugins(CraftingUIPlugin);
+            app.add_plugins(systems::building::BuildingPlugin);
+            app.add_plugins(BuildingUIPlugin);
+            app.add_plugins(systems::quest_manager::QuestManagerPlugin);
+            app.add_plugins(systems::quest_events::QuestEventsPlugin);
+            app.add_plugins(systems::quest_generator::QuestGeneratorPlugin);
+            app.add_plugins(systems::achievement_manager::AchievementManagerPlugin);
+            app.add_plugins(systems::achievement_events::AchievementEventsPlugin);
+            app.add_plugins(systems::achievement_generator::AchievementGeneratorPlugin);
+            app.add_plugins(systems::save_manager::SaveManagerPlugin);
+            app.add_plugins(systems::save_ui::SaveUIPlugin);
+        }
+        _ => {
+            info!("Running Layer {}: Unknown layer, using default (Sys0)", layer);
+        }
+    }
+
+    app.add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
+       .add_systems(Update, systems::lighting::update_lighting)
+       .run();
 }
 
 fn init_render_assets(

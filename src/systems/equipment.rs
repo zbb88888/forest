@@ -4,6 +4,14 @@ use crate::components::player::Player;
 use crate::components::resource::Inventory;
 use rand::Rng;
 
+pub struct EquipmentPlugin;
+
+impl Plugin for EquipmentPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, (spawn_random_equipment, pickup_equipment));
+    }
+}
+
 /// 生成随机装备
 pub fn spawn_random_equipment(
     mut commands: Commands,

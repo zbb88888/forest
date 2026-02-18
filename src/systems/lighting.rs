@@ -1,11 +1,14 @@
 use bevy::prelude::*;
-use crate::systems::time::{GameTime, DayPhase};
+use crate::systems::time::{GameTime, DayPhase, MoonPhase};
 
-/// 环境光照资源
 #[derive(Resource, Clone, Debug)]
 pub struct EnvironmentLighting {
     pub ambient_intensity: f32,
     pub base_color: Color,
+    pub emissive_intensity: f32,
+    pub blood_moon_active: bool,
+    pub transition_timer: f32,
+    pub flash_effect: f32,
 }
 
 impl Default for EnvironmentLighting {
@@ -13,48 +16,76 @@ impl Default for EnvironmentLighting {
         Self {
             ambient_intensity: 1.0,
             base_color: Color::WHITE,
+            emissive_intensity: 0.15,
+            blood_moon_active: false,
+            transition_timer: 0.0,
+            flash_effect: 0.0,
         }
     }
 }
 
-/// 更新环境光照
-pub fn update_lighting(
-    game_time: Res<GameTime>,
-    mut lighting: ResMut<EnvironmentLighting>,
-    camera_query: Query<&mut Camera2d>,
-) {
-    // 获取当前光照强度
-    let light_intensity = game_time.current_phase.light_intensity(game_time.hour);
+pub struct LightingPlugin;
 
-    // 根据昼夜阶段调整光照颜色
-    let light_color = match game_time.current_phase {
-        DayPhase::Dawn => Color::srgb(1.0, 0.9, 0.7),  // 暖黄色
-        DayPhase::Day => Color::srgb(1.0, 1.0, 1.0),    // 白色
-        DayPhase::Dusk => Color::srgb(1.0, 0.6, 0.4),  // 橙红色
-        DayPhase::Night => Color::srgb(0.3, 0.3, 0.5), // 蓝紫色
-    };
-
-    // 更新光照资源
-    lighting.ambient_intensity = light_intensity;
-    lighting.base_color = light_color;
-
-    // 更新相机的背景颜色（模拟昼夜变化）
-    for _camera in camera_query.iter() {
-        // 根据光照强度调整背景颜色的亮度
-        let light_srgba = light_color.to_srgba();
-        let _bg_color = Color::srgb(
-            light_srgba.red * light_intensity,
-            light_srgba.green * light_intensity,
-            light_srgba.blue * light_intensity,
-        );
-
-        // 注意：Bevy 0.18 中 Camera2d 可能没有直接设置背景颜色的方法
-        // 这里我们只记录光照变化，实际渲染可能需要其他方式
-        info!("光照更新: 强度={:.2}, 颜色={:?}", light_intensity, light_color);
+impl Plugin for LightingPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, (update_lighting, apply_blood_moon_effects));
     }
 }
 
-/// 初始化环境光照
+pub fn update_lighting(
+    game_time: Res<GameTime>,
+    mut lighting: ResMut<EnvironmentLighting>,
+) {
+    let prev_phase = lighting.transition_timer;
+    lighting.transition_timer = game_time.hour;
+
+    let phase_changed = (prev_phase - lighting.transition_timer).abs() > 0.1;
+
+    if phase_changed && matches!(game_time.current_phase, DayPhase::Dusk) {
+        lighting.flash_effect = 1.0;
+    }
+
+    if lighting.flash_effect > 0.0 {
+        lighting.flash_effect -= 0.33;
+    }
+
+    let (light_intensity, light_color, emissive) = match game_time.current_phase {
+        DayPhase::Dawn => (0.7, Color::srgb(1.0, 0.9, 0.7), 0.3),
+        DayPhase::Day => (1.0, Color::srgb(0.75, 0.7, 0.51), 0.15),
+        DayPhase::Dusk => (0.5, Color::srgb(1.0, 0.6, 0.4), 0.5),
+        DayPhase::Night => (0.3, Color::srgb(0.3, 0.3, 0.5), 1.2),
+    };
+
+    lighting.ambient_intensity = light_intensity;
+    lighting.base_color = light_color;
+    lighting.emissive_intensity = emissive;
+
+    let saturation_boost = (game_time.day as f32 / 14.0).min(1.0);
+    if saturation_boost > 0.0 {
+        let current = lighting.base_color.to_srgba();
+        let red_boost = 1.0 + saturation_boost * 0.3;
+        lighting.base_color = Color::srgb(
+            current.red * red_boost,
+            current.green * (1.0 - saturation_boost * 0.2),
+            current.blue * (1.0 - saturation_boost * 0.3),
+        );
+    }
+
+    lighting.blood_moon_active = game_time.day == 15 && game_time.moon_phase == MoonPhase::DarkMoon;
+    if lighting.blood_moon_active {
+        lighting.base_color = Color::srgb(1.0, 0.0, 0.2);
+        lighting.emissive_intensity = 2.5;
+    }
+}
+
+pub fn apply_blood_moon_effects(
+    lighting: Res<EnvironmentLighting>,
+) {
+    if lighting.blood_moon_active {
+        info!("Blood moon effect active - sky turns red");
+    }
+}
+
 pub fn init_lighting(mut commands: Commands) {
     commands.insert_resource(EnvironmentLighting::default());
     info!("环境光照系统初始化完成");

@@ -6,6 +6,14 @@ use crate::components::player::Player;
 use crate::resources::world::WorldMap;
 use crate::systems::time::{GameTime, DayPhase};
 
+pub struct RobotPlugin;
+
+impl Plugin for RobotPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, (spawn_robot, robot_ai_system));
+    }
+}
+
 /// 生成机器人
 pub fn spawn_robot(
     mut commands: Commands,
@@ -62,7 +70,7 @@ fn spawn_robot_entity(commands: &mut Commands, robot_type: RobotType, position: 
 pub fn robot_ai_system(
     time: Res<Time>,
     game_time: Res<GameTime>,
-    _world_map: Res<WorldMap>,
+    _world_map: Option<Res<WorldMap>>,
     mut query: Query<(Entity, &mut Robot, &RobotAI, &mut Transform, &mut RobotInventory), Without<Player>>,
     plant_query: Query<(Entity, &Plant, &Transform), (With<Plantable>, Without<Harvestable>, Without<Robot>)>,
     player_query: Query<&Transform, (With<Player>, Without<Robot>)>,

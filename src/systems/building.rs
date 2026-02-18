@@ -59,8 +59,13 @@ fn update_building_production(
 /// 更新建筑功能
 fn update_building_function(
     building_query: Query<(&Building, &BuildingPosition)>,
-    world_map: Res<WorldMap>,
+    world_map: Option<Res<WorldMap>>,
 ) {
+    let world_map = match world_map {
+        Some(wm) => wm,
+        None => return,
+    };
+
     for (building, position) in building_query.iter() {
         // 根据建筑类型执行不同功能
         match building.building_type {
