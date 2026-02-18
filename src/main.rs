@@ -50,6 +50,7 @@ fn main() {
     match layer {
         0 => {
             info!("Running Layer 0: Pure Map");
+            app.add_plugins(systems::map::MapPlugin);
         }
         1 => {
             info!("Running Layer 1: Entity Spawning");
@@ -167,7 +168,7 @@ fn main() {
         }
     }
 
-    app.add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
+    app.add_systems(OnEnter(GameState::InGame), systems::player::spawn_player)
        .add_systems(Update, systems::lighting::update_lighting)
        .run();
 }

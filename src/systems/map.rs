@@ -1,25 +1,26 @@
 use bevy::prelude::*;
-use bevy::sprite_render::prelude::*;
 use bevy::mesh::Mesh2d;
 use bevy::mesh::Mesh;
-use crate::resources::world::{WorldMap, MapTile, TileType};
+use crate::resources::world::{MapGrid, TileType, TileData, TILE_SIZE, CHUNK_SIZE, MapReadyEvent};
 use crate::systems::time::{GameTime, DayPhase, MoonPhase};
 use crate::components::player::Player;
-use rand::Rng;
+use crate::states::GameState;
+use rand::{Rng, SeedableRng};
 
 #[derive(Resource)]
 pub struct MapRenderAssets {
     pub tile_mesh: Handle<Mesh>,
-    pub grass_material: Handle<ColorMaterial>,
-    pub forest_material: Handle<ColorMaterial>,
-    pub desert_material: Handle<ColorMaterial>,
-    pub mountain_material: Handle<ColorMaterial>,
-    pub water_material: Handle<ColorMaterial>,
-    pub dark_forest_material: Handle<ColorMaterial>,
+    pub materials: Vec<Handle<ColorMaterial>>,
     pub metal_tree_material: Handle<ColorMaterial>,
     pub cooling_tower_material: Handle<ColorMaterial>,
     pub circuit_cable_material: Handle<ColorMaterial>,
     pub ruins_material: Handle<ColorMaterial>,
+}
+
+#[derive(Component)]
+pub struct Chunk {
+    pub chunk_x: u32,
+    pub chunk_y: u32,
 }
 
 #[derive(Component)]
@@ -53,175 +54,196 @@ pub enum DecorationType {
     Ruins,
 }
 
+pub struct MapPlugin;
+
+impl Plugin for MapPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::InGame), setup_map)
+            .add_systems(OnEnter(GameState::InGame), spawn_environment_decorations.after(setup_map));
+    }
+}
+
 pub fn setup_map(
     mut commands: Commands,
     assets: Res<MapRenderAssets>,
 ) {
-    let width = 20;
-    let height = 20;
-    let mut rng = rand::thread_rng();
-    let tile_size = 32.0;
+    let width = 20u32;
+    let height = 20u32;
+    let seed = 42u64;
 
-    let mut tiles = Vec::with_capacity(height as usize);
+    let mut map_grid = MapGrid::new(width, height, seed);
 
-    let offset_x = -(width as f32 * tile_size) / 2.0 + tile_size / 2.0;
-    let offset_y = -(height as f32 * tile_size) / 2.0 + tile_size / 2.0;
+    let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+    for y in 0..height {
+        for x in 0..width {
+            let noise_val = rng.gen::<f32>();
+            let tile_type = determine_tile_type(noise_val, x, y, width, height);
+            map_grid.set(x, y, TileData::new(tile_type));
+        }
+    }
+
+    commands.insert_resource(map_grid);
+
+    spawn_chunk_mesh(&mut commands, &assets, width, height);
+
+    commands.trigger(MapReadyEvent {
+        width,
+        height,
+        seed,
+    });
+
+    info!("MapGrid initialized with procedural generation");
+}
+
+fn determine_tile_type(noise: f32, x: u32, y: u32, width: u32, height: u32) -> TileType {
+    let dist_from_center = ((x as f32 - width as f32 / 2.0).powi(2)
+        + (y as f32 - height as f32 / 2.0).powi(2)).sqrt()
+        / ((width.pow(2) + height.pow(2)) as f32).sqrt();
+
+    let adjusted_noise = noise + dist_from_center * 0.3;
+
+    if adjusted_noise < 0.25 {
+        TileType::Water
+    } else if adjusted_noise < 0.4 {
+        TileType::Grass
+    } else if adjusted_noise < 0.6 {
+        TileType::Forest
+    } else if adjusted_noise < 0.75 {
+        TileType::DarkForest
+    } else if adjusted_noise < 0.85 {
+        TileType::Desert
+    } else {
+        TileType::Mountain
+    }
+}
+
+fn spawn_chunk_mesh(
+    commands: &mut Commands,
+    assets: &MapRenderAssets,
+    width: u32,
+    height: u32,
+) {
+    let offset_x = -(width as f32 * TILE_SIZE) / 2.0 + TILE_SIZE / 2.0;
+    let offset_y = -(height as f32 * TILE_SIZE) / 2.0 + TILE_SIZE / 2.0;
 
     for y in 0..height {
-        let mut row = Vec::with_capacity(width as usize);
         for x in 0..width {
-            let tile_type = match rng.gen_range(0..100) {
-                0..=50 => TileType::Grass,
-                51..=75 => TileType::Forest,
-                76..=85 => TileType::Desert,
-                86..=92 => TileType::Mountain,
-                93..=97 => TileType::Water,
-                _ => TileType::DarkForest,
-            };
-
-            let tile = MapTile::new(tile_type, x, y);
-
-            let material = match tile_type {
-                TileType::Grass => assets.grass_material.clone(),
-                TileType::Forest => assets.forest_material.clone(),
-                TileType::Desert => assets.desert_material.clone(),
-                TileType::Mountain => assets.mountain_material.clone(),
-                TileType::Water => assets.water_material.clone(),
-                TileType::DarkForest => assets.dark_forest_material.clone(),
-            };
+            let world_x = offset_x + x as f32 * TILE_SIZE;
+            let world_y = offset_y + y as f32 * TILE_SIZE;
+            let z = 0.0;
 
             commands.spawn((
                 Mesh2d(assets.tile_mesh.clone()),
-                MeshMaterial2d(material),
-                Transform::from_xyz(
-                    offset_x + x as f32 * tile_size,
-                    offset_y + y as f32 * tile_size,
-                    0.0
-                ),
+                MeshMaterial2d(assets.materials[0].clone()),
+                Transform::from_xyz(world_x, world_y, z),
             ));
-
-            row.push(tile);
         }
-        tiles.push(row);
     }
-
-    let world_map = WorldMap::new(width, height, tiles, true, 42);
-    let world_map_clone = world_map.clone();
-    commands.insert_resource(world_map);
-
-    spawn_environment_decorations(&mut commands, &assets, &world_map_clone, width, height, tile_size, offset_x, offset_y);
-
-    info!("WorldMap resource initialized with Native Sprite Rendering");
 }
 
-fn spawn_environment_decorations(
-    commands: &mut Commands,
-    assets: &MapRenderAssets,
-    world_map: &WorldMap,
-    width: u32,
-    height: u32,
-    tile_size: f32,
-    offset_x: f32,
-    offset_y: f32,
+pub fn spawn_environment_decorations(
+    mut commands: Commands,
+    assets: Res<MapRenderAssets>,
+    map_grid: Res<MapGrid>,
 ) {
+    let width = map_grid.size.x;
+    let height = map_grid.size.y;
+
+    let offset_x = -(width as f32 * TILE_SIZE) / 2.0 + TILE_SIZE / 2.0;
+    let offset_y = -(height as f32 * TILE_SIZE) / 2.0 + TILE_SIZE / 2.0;
+
     let mut rng = rand::thread_rng();
 
     for y in 0..height {
         for x in 0..width {
-            let world_x = offset_x + x as f32 * tile_size;
-            let world_y = offset_y + y as f32 * tile_size;
+            let world_x = offset_x + x as f32 * TILE_SIZE;
+            let world_y = offset_y + y as f32 * TILE_SIZE;
 
-            let tile = world_map.get_tile(x, y).unwrap_or_else(|| {
-                world_map.tiles[y as usize].get(x as usize).unwrap()
-            });
-
-            let can_spawn_tree = matches!(tile.tile_type, TileType::Forest | TileType::DarkForest | TileType::Grass);
-            let can_spawn_tower = matches!(tile.tile_type, TileType::Desert | TileType::Mountain | TileType::Grass);
-            let can_spawn_cable = matches!(tile.tile_type, TileType::Grass | TileType::Forest);
-            let can_spawn_ruins = matches!(tile.tile_type, TileType::Desert | TileType::Mountain);
-
-            if can_spawn_tree && rng.gen_range(0..100) < 12 {
-                spawn_metal_tree(commands, assets, world_x, world_y);
-            }
-
-            if can_spawn_tower && rng.gen_range(0..100) < 6 {
-                spawn_cooling_tower(commands, assets, world_x, world_y);
-            }
-
-            if can_spawn_cable && rng.gen_range(0..100) < 8 {
-                spawn_circuit_cable(commands, assets, world_x, world_y);
-            }
-
-            if can_spawn_ruins && rng.gen_range(0..100) < 4 {
-                spawn_ruins(commands, assets, world_x, world_y);
+            if let Some(tile) = map_grid.get(x, y) {
+                spawn_decoration_for_tile(&mut commands, &assets, world_x, world_y, tile.tile_type, &mut rng);
             }
         }
     }
 }
 
-fn spawn_metal_tree(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
+fn spawn_decoration_for_tile(
+    commands: &mut Commands,
+    assets: &MapRenderAssets,
+    x: f32,
+    y: f32,
+    tile_type: TileType,
+    rng: &mut impl Rng,
+) {
     let z = 10.0 - y * 0.01;
-    commands.spawn((
-        Mesh2d(assets.tile_mesh.clone()),
-        MeshMaterial2d(assets.metal_tree_material.clone()),
-        Transform::from_xyz(x, y, z).with_scale(Vec3::new(0.8, 1.2, 1.0)),
-        MetalTree {
-            jitter_timer: 0.0,
-            pulse_phase: rand::thread_rng().gen_range(0.0..std::f32::consts::TAU),
-        },
-        EnvironmentDecoration {
-            decoration_type: DecorationType::MetalTree,
-        },
-    ));
-}
 
-fn spawn_cooling_tower(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
-    let z = 10.0 - y * 0.01;
-    commands.spawn((
-        Mesh2d(assets.tile_mesh.clone()),
-        MeshMaterial2d(assets.cooling_tower_material.clone()),
-        Transform::from_xyz(x, y, z).with_scale(Vec3::new(1.5, 2.0, 1.0)),
-        CoolingTower {
-            heat_level: 0.0,
-            pulse_timer: 0.0,
-        },
-        EnvironmentDecoration {
-            decoration_type: DecorationType::CoolingTower,
-        },
-    ));
-}
+    match tile_type {
+        TileType::Forest | TileType::DarkForest | TileType::Grass => {
+            if rng.gen_range(0..100) < 12 {
+                commands.spawn((
+                    Mesh2d(assets.tile_mesh.clone()),
+                    MeshMaterial2d(assets.metal_tree_material.clone()),
+                    Transform::from_xyz(x, y, z).with_scale(Vec3::new(0.8, 1.2, 1.0)),
+                    MetalTree {
+                        jitter_timer: 0.0,
+                        pulse_phase: rng.gen_range(0.0..std::f32::consts::TAU),
+                    },
+                    EnvironmentDecoration {
+                        decoration_type: DecorationType::MetalTree,
+                    },
+                ));
+            }
 
-fn spawn_circuit_cable(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
-    let z = 5.0 - y * 0.01;
-    let direction = Vec2::new(
-        rand::thread_rng().gen_range(-1.0..1.0),
-        rand::thread_rng().gen_range(-1.0..1.0),
-    ).normalize_or_zero();
+            if rng.gen_range(0..100) < 8 {
+                let direction = Vec2::new(
+                    rng.gen_range(-1.0..1.0),
+                    rng.gen_range(-1.0..1.0),
+                ).normalize_or_zero();
 
-    commands.spawn((
-        Mesh2d(assets.tile_mesh.clone()),
-        MeshMaterial2d(assets.circuit_cable_material.clone()),
-        Transform::from_xyz(x, y, z).with_scale(Vec3::new(2.0, 0.2, 1.0)),
-        CircuitCable {
-            flow_direction: direction,
-            pulse_speed: 2.0,
-        },
-        EnvironmentDecoration {
-            decoration_type: DecorationType::CircuitCable,
-        },
-    ));
-}
+                commands.spawn((
+                    Mesh2d(assets.tile_mesh.clone()),
+                    MeshMaterial2d(assets.circuit_cable_material.clone()),
+                    Transform::from_xyz(x, y, z - 0.01).with_scale(Vec3::new(2.0, 0.2, 1.0)),
+                    CircuitCable {
+                        flow_direction: direction,
+                        pulse_speed: 2.0,
+                    },
+                    EnvironmentDecoration {
+                        decoration_type: DecorationType::CircuitCable,
+                    },
+                ));
+            }
+        }
 
-fn spawn_ruins(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
-    let z = 10.0 - y * 0.01;
-    commands.spawn((
-        Mesh2d(assets.tile_mesh.clone()),
-        MeshMaterial2d(assets.ruins_material.clone()),
-        Transform::from_xyz(x, y, z).with_scale(Vec3::new(0.6, 0.6, 1.0)),
-        EnvironmentDecoration {
-            decoration_type: DecorationType::Ruins,
-        },
-    ));
+        TileType::Desert | TileType::Mountain => {
+            if rng.gen_range(0..100) < 6 {
+                commands.spawn((
+                    Mesh2d(assets.tile_mesh.clone()),
+                    MeshMaterial2d(assets.cooling_tower_material.clone()),
+                    Transform::from_xyz(x, y, z).with_scale(Vec3::new(1.5, 2.0, 1.0)),
+                    CoolingTower {
+                        heat_level: 0.0,
+                        pulse_timer: 0.0,
+                    },
+                    EnvironmentDecoration {
+                        decoration_type: DecorationType::CoolingTower,
+                    },
+                ));
+            }
+
+            if rng.gen_range(0..100) < 4 {
+                commands.spawn((
+                    Mesh2d(assets.tile_mesh.clone()),
+                    MeshMaterial2d(assets.ruins_material.clone()),
+                    Transform::from_xyz(x, y, z).with_scale(Vec3::new(0.6, 0.6, 1.0)),
+                    EnvironmentDecoration {
+                        decoration_type: DecorationType::Ruins,
+                    },
+                ));
+            }
+        }
+
+        TileType::Water => {}
+    }
 }
 
 pub fn update_environment_animations(
@@ -276,14 +298,21 @@ pub fn init_map_assets(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
 ) -> MapRenderAssets {
-    let tile_mesh = meshes.add(Rectangle::new(31.0, 31.0));
+    let tile_mesh = meshes.add(Rectangle::new(TILE_SIZE - 1.0, TILE_SIZE - 1.0));
 
-    let grass_material = materials.add(ColorMaterial::from_color(Color::srgb(0.2, 0.8, 0.2)));
-    let forest_material = materials.add(ColorMaterial::from_color(Color::srgb(0.1, 0.5, 0.1)));
-    let desert_material = materials.add(ColorMaterial::from_color(Color::srgb(0.9, 0.8, 0.5)));
-    let mountain_material = materials.add(ColorMaterial::from_color(Color::srgb(0.5, 0.5, 0.5)));
-    let water_material = materials.add(ColorMaterial::from_color(Color::srgb(0.2, 0.4, 0.8)));
-    let dark_forest_material = materials.add(ColorMaterial::from_color(Color::srgb(0.1, 0.1, 0.2)));
+    let tile_colors = vec![
+        Color::srgb(0.2, 0.8, 0.2),
+        Color::srgb(0.0, 0.4, 0.0),
+        Color::srgb(0.5, 0.5, 0.5),
+        Color::srgb(0.2, 0.2, 0.8),
+        Color::srgb(0.9, 0.8, 0.6),
+        Color::srgb(0.1, 0.2, 0.1),
+    ];
+
+    let mat_handles: Vec<Handle<ColorMaterial>> = tile_colors
+        .iter()
+        .map(|c| materials.add(ColorMaterial::from_color(*c)))
+        .collect();
 
     let metal_tree_material = materials.add(ColorMaterial::from_color(Color::srgb(0.24, 0.15, 0.14)));
     let cooling_tower_material = materials.add(ColorMaterial::from_color(Color::srgb(0.36, 0.25, 0.22)));
@@ -292,12 +321,7 @@ pub fn init_map_assets(
 
     MapRenderAssets {
         tile_mesh,
-        grass_material,
-        forest_material,
-        desert_material,
-        mountain_material,
-        water_material,
-        dark_forest_material,
+        materials: mat_handles,
         metal_tree_material,
         cooling_tower_material,
         circuit_cable_material,
