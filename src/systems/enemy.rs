@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::components::enemy::{
-    Enemy, EnemyType, EnemyPosition, EnemyStatus, AIState, AIBehavior, AttackType
+    Enemy, EnemyType, EnemyPosition, EnemyStatus, AIState, AIBehavior, AttackType, EnemyBase
 };
 use crate::components::player::Player;
 use crate::resources::world::WorldMap;
@@ -27,14 +27,14 @@ fn update_enemy_ai(
         &mut EnemyStatus,
         &Transform,
         &EnemyPosition
-    )>,
-    player_query: Query<(Entity, &Transform), With<Player>>,
+    ), Without<Player>>,
+    player_query: Query<(Entity, &Transform), (With<Player>, Without<Enemy>)>,
     world_map: Res<WorldMap>,
 ) {
     let Ok((player_entity, player_transform)) = player_query.single() else { return; };
     let player_pos = player_transform.translation;
 
-    for (entity, mut enemy, mut status, transform, position) in enemy_query.iter_mut() {
+    for (_entity, mut enemy, mut status, transform, position) in enemy_query.iter_mut() {
         if enemy.is_dead() {
             enemy.ai_state = AIState::Dead;
             continue;
@@ -128,7 +128,7 @@ fn update_enemy_ai(
 }
 
 /// 巡逻AI逻辑
-fn patrol_ai(enemy: &mut Enemy, time: &Time, world_map: &WorldMap, position: &EnemyPosition) {
+fn patrol_ai(_enemy: &mut Enemy, time: &Time, world_map: &WorldMap, position: &EnemyPosition) {
     // 简化的巡逻逻辑：随机选择相邻瓦片
     let tile_size = 32.0;
     let patrol_radius = 5.0;
@@ -168,7 +168,7 @@ fn patrol_ai(enemy: &mut Enemy, time: &Time, world_map: &WorldMap, position: &En
 }
 
 /// 守卫AI逻辑
-fn guard_ai(enemy: &mut Enemy, position: &EnemyPosition) {
+fn guard_ai(enemy: &mut Enemy, _position: &EnemyPosition) {
     // 守卫逻辑：返回守卫位置
     // 实际移动在movement系统中处理
     // 这里只是设置AI状态
@@ -180,7 +180,7 @@ fn boss_ai(
     enemy: &mut Enemy,
     status: &mut EnemyStatus,
     distance_to_player: f32,
-    player_query: &Query<(Entity, &Transform), With<Player>>,
+    _player_query: &Query<(Entity, &Transform), (With<Player>, Without<Enemy>)>,
 ) {
     let health_percent = enemy.health_percentage();
 
@@ -212,9 +212,9 @@ fn boss_ai(
 /// 更新敌人移动
 fn update_enemy_movement(
     time: Res<Time>,
-    mut enemy_query: Query<(&mut Transform, &Enemy, &EnemyPosition)>,
+    mut enemy_query: Query<(&mut Transform, &Enemy, &EnemyPosition), Without<EnemyBase>>,
 ) {
-    for (mut transform, enemy, position) in enemy_query.iter_mut() {
+    for (mut transform, enemy, _position) in enemy_query.iter_mut() {
         if enemy.ai_state == AIState::Dead {
             continue;
         }
@@ -225,7 +225,7 @@ fn update_enemy_movement(
         match enemy.ai_state {
             AIState::Chase => {
                 // 追逐玩家
-                if let Some(target) = enemy.target {
+                if let Some(_target) = enemy.target {
                     // 这里需要获取目标的位置
                     // 简化处理：向目标方向移动
                     // 实际实现需要查询目标实体的Transform

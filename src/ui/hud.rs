@@ -135,29 +135,29 @@ fn setup_hud(mut commands: Commands) {
 
 fn update_hud(
     player_query: Query<&Inventory, With<Player>>,
-    mut energy_query: Query<&mut Text, (With<EnergyText>, Without<MetalText>, Without<SoilText>)>,
-    mut metal_query: Query<&mut Text, (With<MetalText>, Without<EnergyText>, Without<SoilText>)>,
-    mut soil_query: Query<&mut Text, (With<SoilText>, Without<EnergyText>, Without<MetalText>)>,
     game_time: Res<GameTime>,
-    mut time_query: Query<&mut Text, With<TimeText>>,
-    mut day_phase_query: Query<&mut Text, With<DayPhaseText>>,
-    mut moon_phase_query: Query<&mut Text, With<MoonPhaseText>>,
+    mut text_queries: ParamSet<(
+        Query<&mut Text, With<EnergyText>>,
+        Query<&mut Text, With<MetalText>>,
+        Query<&mut Text, With<SoilText>>,
+        Query<&mut Text, With<TimeText>>,
+        Query<&mut Text, With<DayPhaseText>>,
+        Query<&mut Text, With<MoonPhaseText>>,
+    )>,
 ) {
-    // Update resources
     if let Some(inventory) = player_query.iter().next() {
-        for mut text in energy_query.iter_mut() {
+        for mut text in text_queries.p0() {
             text.0 = format!("Energy: {}", inventory.energy);
         }
-        for mut text in metal_query.iter_mut() {
+        for mut text in text_queries.p1() {
             text.0 = format!("Metal: {}", inventory.metal);
         }
-        for mut text in soil_query.iter_mut() {
+        for mut text in text_queries.p2() {
             text.0 = format!("Soil: {}", inventory.soil);
         }
     }
 
-    // Update time display
-    for mut text in time_query.iter_mut() {
+    for mut text in text_queries.p3() {
         text.0 = format!(
             "Day {} {:02.0}:{:02.0}",
             game_time.day,
@@ -166,8 +166,7 @@ fn update_hud(
         );
     }
 
-    // Update day phase display
-    for mut text in day_phase_query.iter_mut() {
+    for mut text in text_queries.p4() {
         let phase_name = match game_time.current_phase {
             DayPhase::Dawn => "Dawn",
             DayPhase::Day => "Day",
@@ -177,8 +176,7 @@ fn update_hud(
         text.0 = format!("{}", phase_name);
     }
 
-    // Update moon phase display
-    for mut text in moon_phase_query.iter_mut() {
+    for mut text in text_queries.p5() {
         let phase_name = match game_time.moon_phase {
             MoonPhase::NewMoon => "New Moon",
             MoonPhase::WaxingCrescent => "Waxing Crescent",

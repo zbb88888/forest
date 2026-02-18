@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::components::enemy::{Enemy, EnemyStatus, AttackType};
+use crate::components::player::Player;
 
 /// 敌人攻击系统插件
 pub struct EnemyAttackPlugin;
@@ -41,8 +42,8 @@ impl AttackEffect {
 fn update_enemy_attacks(
     time: Res<Time>,
     mut commands: Commands,
-    mut enemy_query: Query<(&mut Enemy, &mut EnemyStatus, &Transform)>,
-    player_query: Query<(Entity, &Transform), With<crate::components::player::Player>>,
+    mut enemy_query: Query<(&mut Enemy, &mut EnemyStatus, &Transform), Without<Player>>,
+    player_query: Query<(Entity, &Transform), (With<Player>, Without<Enemy>)>,
 ) {
     for (mut enemy, mut status, transform) in enemy_query.iter_mut() {
         if enemy.ai_state != crate::components::enemy::AIState::Attack {
@@ -117,7 +118,7 @@ fn perform_melee_attack(
     commands: &mut Commands,
     enemy: &Enemy,
     enemy_transform: &Transform,
-    target_entity: Entity,
+    _target_entity: Entity,
     target_transform: &Transform,
 ) {
     info!("近战攻击: {:?}, 伤害: {}", enemy.enemy_type, enemy.stats.damage);
@@ -150,7 +151,7 @@ fn perform_laser_attack(
     commands: &mut Commands,
     enemy: &Enemy,
     enemy_transform: &Transform,
-    target_entity: Entity,
+    _target_entity: Entity,
     target_transform: &Transform,
 ) {
     info!("激光攻击: {:?}, 伤害: {}", enemy.enemy_type, enemy.stats.damage);
@@ -246,7 +247,7 @@ fn perform_summon_attack(
 fn update_attack_effects(
     time: Res<Time>,
     mut commands: Commands,
-    mut effect_query: Query<(Entity, &mut AttackEffect, &mut Transform)>,
+    mut effect_query: Query<(Entity, &mut AttackEffect, &mut Transform), Without<Player>>,
 ) {
     for (entity, mut effect, mut transform) in effect_query.iter_mut() {
         effect.timer += time.delta_secs();

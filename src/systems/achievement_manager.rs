@@ -17,7 +17,7 @@ impl Plugin for AchievementManagerPlugin {
 
 /// 检查成就解锁条件
 fn check_achievements(
-    mut commands: Commands,
+    _commands: Commands,
     mut achievement_query: Query<&mut Achievement>,
     mut achievement_log_query: Query<&mut AchievementLog>,
     player_query: Query<&crate::components::player::Player>,
@@ -65,7 +65,7 @@ fn check_achievement_condition(
     condition: &AchievementCondition,
     player_level: u32,
     play_time: f32,
-    achievement_log_query: &mut Query<&mut AchievementLog>,
+    _achievement_log_query: &mut Query<&mut AchievementLog>,
 ) -> bool {
     match condition {
         // 社交条件：达到指定等级
@@ -85,7 +85,7 @@ fn check_achievement_condition(
         }
 
         // 自定义条件
-        AchievementCondition::Custom(_, value) => {
+        AchievementCondition::Custom(_, _value) => {
             // 实际实现需要根据具体条件检查
             false
         }
@@ -129,7 +129,7 @@ fn update_achievement_stats(
 
 /// 解锁成就
 pub fn unlock_achievement(
-    commands: &mut Commands,
+    _commands: &mut Commands,
     achievement_id: String,
     achievement_log: &mut AchievementLog,
 ) -> Result<(), String> {

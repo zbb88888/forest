@@ -52,6 +52,7 @@ impl MoonPhase {
     }
 
     /// 获取月相的资源倍率
+    #[allow(dead_code)]
     pub fn resource_multiplier(&self) -> f32 {
         match self {
             MoonPhase::NewMoon => 2.0,
@@ -67,6 +68,7 @@ impl MoonPhase {
     }
 
     /// 获取月相的AI扫描强度
+    #[allow(dead_code)]
     pub fn scan_intensity(&self) -> f32 {
         match self {
             MoonPhase::NewMoon => 0.1,

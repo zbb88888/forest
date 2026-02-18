@@ -1,6 +1,4 @@
 use bevy::prelude::*;
-use crate::components::resource::Inventory;
-use crate::components::equipment::EquipmentBar;
 
 #[allow(dead_code)]
 #[derive(Component)]

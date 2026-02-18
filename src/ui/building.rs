@@ -1,21 +1,20 @@
 use bevy::prelude::*;
 use crate::states::GameState;
-use crate::components::building::{
-    BuildingType, BuildingStats, BuildingPosition, BuildingStatus, Inventory
-};
+use crate::components::building::{BuildingType, Inventory};
 use crate::systems::building::{place_building, upgrade_building, start_building, stop_building};
 
 pub struct BuildingUIPlugin;
 
 impl Plugin for BuildingUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
-            toggle_building_panel,
-            update_building_panel.run_if(in_state(GameState::InGame)),
-            handle_place_button.run_if(in_state(GameState::InGame)),
-            handle_upgrade_button.run_if(in_state(GameState::InGame)),
-            handle_start_stop_button.run_if(in_state(GameState::InGame)),
-        ));
+        app.init_resource::<BuildingUIState>()
+            .add_systems(Update, (
+                toggle_building_panel,
+                update_building_panel.run_if(in_state(GameState::InGame)),
+                handle_place_button.run_if(in_state(GameState::InGame)),
+                handle_upgrade_button.run_if(in_state(GameState::InGame)),
+                handle_start_stop_button.run_if(in_state(GameState::InGame)),
+            ));
     }
 }
 
@@ -77,9 +76,6 @@ fn spawn_building_panel(commands: &mut Commands) {
                 padding: UiRect::all(Val::Px(10.0)),
                 ..default()
             },
-            Style {
-                gap: Val::Px(10.0),
-            },
             BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.9)),
             BuildingPanel,
         ))
@@ -127,7 +123,7 @@ fn spawn_building_panel(commands: &mut Commands) {
             // 示例建筑按钮 - 能源收集器
             parent.spawn((
                 Button,
-                Style {
+                Node {
                     width: Val::Px(380.0),
                     height: Val::Px(40.0),
                     justify_content: JustifyContent::Center,
@@ -154,7 +150,7 @@ fn spawn_building_panel(commands: &mut Commands) {
             // 示例建筑按钮 - 金属矿
             parent.spawn((
                 Button,
-                Style {
+                Node {
                     width: Val::Px(380.0),
                     height: Val::Px(40.0),
                     justify_content: JustifyContent::Center,
@@ -182,7 +178,7 @@ fn spawn_building_panel(commands: &mut Commands) {
 
 fn update_building_panel(
     ui_state: Res<BuildingUIState>,
-    inventory: Res<Inventory>,
+    _inventory: Res<Inventory>,
     mut cost_query: Query<&mut Text, With<BuildingCostText>>,
 ) {
     if !ui_state.is_visible {
@@ -190,7 +186,7 @@ fn update_building_panel(
     }
 
     // 更新建筑成本显示
-    for mut text in cost_query.iter_mut() {
+    for _text in cost_query.iter_mut() {
         // 这里可以根据选中的建筑更新成本显示
         // 简化处理，暂时不更新
     }
@@ -221,7 +217,7 @@ fn handle_place_button(
                 &world_map,
                 &mut inventory,
             ) {
-                Ok(entity) => {
+                Ok(_entity) => {
                     info!("成功放置建筑: {:?}", button.building_type);
                     // TODO: 记录选中的建筑实体
                 }

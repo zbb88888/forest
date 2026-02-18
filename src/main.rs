@@ -39,27 +39,26 @@ use systems::save_manager::SaveManagerPlugin;
 use systems::save_ui::SaveUIPlugin;
 
 fn main() {
+    std::panic::set_hook(Box::new(|info| {
+        eprintln!("PANIC: {}", info);
+    }));
+
     let is_headless = env::var("HEADLESS").is_ok();
 
     let mut app = App::new();
 
     if is_headless {
-        // Headless mode: Use MinimalPlugins to avoid any rendering dependencies
-        // MinimalPlugins already includes ScheduleRunnerPlugin, so we configure it via set()
         app.add_plugins(MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(
             1.0 / 60.0,
         ))));
 
-        // Add necessary non-rendering plugins
         app.add_plugins(bevy::log::LogPlugin::default());
-        app.add_plugins(bevy::state::app::StatesPlugin); // Required for state management
+        app.add_plugins(bevy::state::app::StatesPlugin);
 
         println!("Running in HEADLESS mode (MinimalPlugins)");
 
-        // In headless mode, auto-start the game
         app.add_systems(Startup, start_game_headless);
     } else {
-        // Normal mode: Window + Rendering
         app.add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Dark Forest".into(),
@@ -69,74 +68,44 @@ fn main() {
             ..default()
         }));
 
-        // Add UI plugins only in graphics mode
         app.add_plugins((MenuPlugin, HUDPlugin));
 
         println!("Running in GRAPHICS mode");
     }
 
-    // Initialize state with default value
     app.init_state::<GameState>()
         .add_systems(Startup, setup)
-        // Initialize game time and lighting
         .add_systems(Startup, systems::time::init_game_time)
         .add_systems(Startup, systems::lighting::init_lighting)
-        // Add plant upgrade system
         .add_plugins(PlantUpgradePlugin)
         .add_plugins(PlantUpgradeUIPlugin)
-        // Add crafting system
         .add_plugins(CraftingPlugin)
         .add_plugins(CraftingUIPlugin)
-        // Add building system
         .add_plugins(BuildingPlugin)
         .add_plugins(BuildingUIPlugin)
-        // Add enemy system
         .add_plugins(EnemyPlugin)
         .add_plugins(EnemySpawnPlugin)
         .add_plugins(EnemyAttackPlugin)
         .add_plugins(EnemyBasePlugin)
-        // Add combat system
         .add_plugins(CombatPlugin)
         .add_plugins(PlayerCombatPlugin)
         .add_plugins(CombatEffectsPlugin)
-        // Add defense system
         .add_plugins(DefenseTowerPlugin)
         .add_plugins(DefenseWallPlugin)
         .add_plugins(DefenseRangePlugin)
-        // Add quest system
         .add_plugins(QuestManagerPlugin)
         .add_plugins(QuestEventsPlugin)
         .add_plugins(QuestGeneratorPlugin)
-        // Add achievement system
         .add_plugins(AchievementManagerPlugin)
         .add_plugins(AchievementEventsPlugin)
         .add_plugins(AchievementGeneratorPlugin)
-        // Add save system
         .add_plugins(SaveManagerPlugin)
         .add_plugins(SaveUIPlugin)
-        // Move map and player setup to InGame state
         .add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
-        // Run systems only in InGame state
-        .add_systems(Update, (
-            systems::time::update_time,
-            systems::lighting::update_lighting,
-            systems::player::move_player_randomly,
-            systems::plant::plant_seed,
-            systems::plant::grow_plants,
-            systems::plant::harvest_plants,
-            systems::plant::plant_decay,
-            systems::robot::spawn_robot,
-            systems::robot::robot_ai_system,
-            systems::equipment::spawn_random_equipment,
-            systems::equipment::pickup_equipment,
-            systems::equipment::upgrade_equipment,
-            systems::equipment::display_equipment_info,
-        ))
         .run();
 }
 
 fn setup(mut commands: Commands) {
-    // Camera is only needed in graphics mode
     if std::env::var("HEADLESS").is_err() {
         commands.spawn((
             Camera2d,

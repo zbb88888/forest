@@ -8,7 +8,7 @@ use rand::Rng;
 pub fn spawn_random_equipment(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<&Transform, With<Player>>,
+    player_query: Query<&Transform, (With<Player>, Without<Equipment>)>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyE) {
         let Ok(player_transform) = player_query.single() else { return; };
@@ -77,8 +77,8 @@ fn format_rarity(rarity: EquipmentRarity) -> &'static str {
 pub fn pickup_equipment(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<&Transform, With<Player>>,
-    mut equipment_query: Query<(Entity, &Equipment, &Transform)>,
+    player_query: Query<&Transform, (With<Player>, Without<Equipment>)>,
+    mut equipment_query: Query<(Entity, &Equipment, &Transform), Without<Player>>,
     mut player_equipment_bar: Query<&mut EquipmentBar, With<Player>>,
 ) {
     if !keyboard_input.just_pressed(KeyCode::KeyF) {
@@ -112,7 +112,7 @@ pub fn pickup_equipment(
 
 /// 升级装备
 pub fn upgrade_equipment(
-    mut commands: Commands,
+    _commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut equipment_query: Query<(Entity, &mut Equipment)>,
     mut player_inventory: Query<&mut Inventory, With<Player>>,
@@ -126,7 +126,7 @@ pub fn upgrade_equipment(
     let Ok(mut inventory) = player_inventory.single_mut() else { return; };
     if inventory.energy >= upgrade_cost {
         // 升级第一个找到的装备
-        for (entity, mut equipment) in equipment_query.iter_mut() {
+        for (_entity, mut equipment) in equipment_query.iter_mut() {
             if equipment.level < 10 {
                 equipment.upgrade();
                 inventory.energy -= upgrade_cost;

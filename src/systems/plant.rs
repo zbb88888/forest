@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use crate::components::plant::{Plant, PlantType, Growable, Plantable, Harvestable};
 use crate::components::plant_upgrade::PlantUpgrade;
 use crate::components::resource::{ResourceItem, ResourceType};
+use crate::components::player::Player;
 use crate::resources::world::{WorldMap, TileType};
 use crate::systems::time::{GameTime, DayPhase};
 
@@ -89,7 +90,7 @@ pub fn grow_plants(
     time: Res<Time>,
     game_time: Res<GameTime>,
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Plant, &mut Growable, &mut Transform, Option<&PlantUpgrade>)>,
+    mut query: Query<(Entity, &mut Plant, &mut Growable, &mut Transform, Option<&PlantUpgrade>), Without<Player>>,
 ) {
     // 白天生长更快
     let day_multiplier = match game_time.current_phase {

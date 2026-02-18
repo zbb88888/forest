@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::components::equipment::{EquipmentType, EquipmentRarity, EquipmentStats};
+use crate::components::equipment::{EquipmentType, EquipmentRarity};
 
 /// 装备制造配方
 #[derive(Debug, Clone, Resource)]

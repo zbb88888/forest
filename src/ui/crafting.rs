@@ -3,7 +3,7 @@ use crate::states::GameState;
 use crate::components::crafting::{RecipeBook, MaterialType};
 use crate::components::equipment::{EquipmentType, EquipmentRarity};
 use crate::components::resource::Inventory;
-use crate::systems::crafting::{start_crafting, upgrade_equipment};
+use crate::systems::crafting::start_crafting;
 
 pub struct CraftingUIPlugin;
 
@@ -74,9 +74,6 @@ fn spawn_crafting_panel(commands: &mut Commands) {
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
                 ..default()
-            },
-            Style {
-                gap: Val::Px(10.0),
             },
             BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.9)),
             CraftingPanel,
@@ -190,7 +187,7 @@ fn spawn_crafting_panel(commands: &mut Commands) {
             // 示例配方按钮
             parent.spawn((
                 Button,
-                Style {
+                Node {
                     width: Val::Px(380.0),
                     height: Val::Px(40.0),
                     justify_content: JustifyContent::Center,
@@ -219,7 +216,7 @@ fn spawn_crafting_panel(commands: &mut Commands) {
 fn update_crafting_panel(
     ui_state: Res<CraftingUIState>,
     inventory: Res<Inventory>,
-    recipe_book: Res<RecipeBook>,
+    _recipe_book: Res<RecipeBook>,
     mut material_query: Query<(&mut Text, &MaterialText)>,
 ) {
     if !ui_state.is_visible {
@@ -238,7 +235,7 @@ fn handle_recipe_button(
     mut inventory: ResMut<Inventory>,
     recipe_book: Res<RecipeBook>,
     quality_control: Res<crate::components::crafting::QualityControl>,
-    mut commands: Commands,
+    _commands: Commands,
     mut interaction_query: Query<(&Interaction, &RecipeButton), Changed<Interaction>>,
 ) {
     if !ui_state.is_visible {
@@ -275,9 +272,9 @@ fn handle_recipe_button(
 
 fn handle_upgrade_button(
     ui_state: Res<CraftingUIState>,
-    mut inventory: ResMut<Inventory>,
-    upgrade_optimization: Res<crate::components::crafting::UpgradeOptimization>,
-    mut equipment_query: Query<&mut crate::components::equipment::Equipment>,
+    _inventory: ResMut<Inventory>,
+    _upgrade_optimization: Res<crate::components::crafting::UpgradeOptimization>,
+    _equipment_query: Query<&mut crate::components::equipment::Equipment>,
     mut interaction_query: Query<&Interaction, (Changed<Interaction>, With<UpgradeButton>)>,
 ) {
     if !ui_state.is_visible {

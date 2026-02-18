@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::components::enemy::{EnemyBase, EnemyType, EnemyPosition};
+use crate::components::enemy::{EnemyBase, EnemyType, EnemyPosition, Enemy};
 use crate::systems::enemy_spawn::{spawn_enemy_at, spawn_base_at};
 
 /// 敌人大本营系统插件
@@ -17,11 +17,11 @@ impl Plugin for EnemyBasePlugin {
 
 /// 更新基地生命
 fn update_base_health(
-    mut commands: Commands,
-    mut base_query: Query<(Entity, &mut EnemyBase, &mut EnemyPosition)>,
-    time: Res<Time>,
+    _commands: Commands,
+    mut base_query: Query<(Entity, &mut EnemyBase, &mut EnemyPosition), Without<Enemy>>,
+    _time: Res<Time>,
 ) {
-    for (entity, mut base, position) in base_query.iter_mut() {
+    for (_entity, base, _position) in base_query.iter_mut() {
         // 检查基地是否需要恢复
         // 可以添加逻辑让基地在一定条件下恢复生命
         // 例如：每30秒恢复10%的生命值
@@ -36,10 +36,10 @@ fn update_base_health(
 /// 更新基地生成
 fn update_base_spawning(
     time: Res<Time>,
-    mut base_query: Query<(Entity, &mut EnemyBase, &Transform)>,
+    mut base_query: Query<(Entity, &mut EnemyBase, &Transform), Without<Enemy>>,
     mut commands: Commands,
 ) {
-    for (entity, mut base, transform) in base_query.iter_mut() {
+    for (_entity, mut base, transform) in base_query.iter_mut() {
         if !base.active {
             continue;
         }
@@ -138,10 +138,10 @@ fn spawn_from_mother_base(
 
 /// 处理基地摧毁
 fn handle_base_destruction(
-    mut commands: Commands,
-    mut base_query: Query<(Entity, &EnemyBase, &Transform)>,
+    _commands: Commands,
+    mut base_query: Query<(Entity, &EnemyBase, &Transform), Without<Enemy>>,
 ) {
-    for (entity, base, transform) in base_query.iter_mut() {
+    for (_entity, _base, _transform) in base_query.iter_mut() {
         // 检查基地是否被摧毁
         // 实际实现需要检查基地的生命值
         // 这里只是示例

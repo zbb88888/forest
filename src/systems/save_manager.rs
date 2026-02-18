@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::components::save::{
-    SaveManager, SaveType, SaveStatus, SaveInfo, SaveData,
+    SaveManager, SaveType, SaveInfo, SaveData,
     PlayerData, WorldData, QuestData, AchievementData, EquipmentData
 };
 
@@ -20,7 +20,7 @@ fn handle_auto_save(
     time: Res<Time>,
     mut save_manager_query: Query<&mut SaveManager>,
 ) {
-    if let Ok(mut save_manager) = save_manager_query.single_mut() {
+    if let Ok(save_manager) = save_manager_query.single_mut() {
         let current_time = time.elapsed_secs();
 
         if save_manager.should_auto_save(current_time) {
@@ -140,7 +140,7 @@ fn collect_save_data(
 }
 
 /// 收集玩家数据
-fn collect_player_data(world: &World) -> Result<PlayerData, String> {
+fn collect_player_data(_world: &World) -> Result<PlayerData, String> {
     // 实际实现需要从玩家系统获取数据
     Ok(PlayerData {
         level: 1,
@@ -158,7 +158,7 @@ fn collect_player_data(world: &World) -> Result<PlayerData, String> {
 }
 
 /// 收集世界数据
-fn collect_world_data(world: &World) -> Result<WorldData, String> {
+fn collect_world_data(_world: &World) -> Result<WorldData, String> {
     // 实际实现需要从世界系统获取数据
     Ok(WorldData {
         time: 0.0,
@@ -170,7 +170,7 @@ fn collect_world_data(world: &World) -> Result<WorldData, String> {
 }
 
 /// 收集任务数据
-fn collect_quest_data(world: &World) -> Result<QuestData, String> {
+fn collect_quest_data(_world: &World) -> Result<QuestData, String> {
     // 实际实现需要从任务系统获取数据
     Ok(QuestData {
         active_quests: Vec::new(),
@@ -181,7 +181,7 @@ fn collect_quest_data(world: &World) -> Result<QuestData, String> {
 }
 
 /// 收集成就数据
-fn collect_achievement_data(world: &World) -> Result<AchievementData, String> {
+fn collect_achievement_data(_world: &World) -> Result<AchievementData, String> {
     // 实际实现需要从成就系统获取数据
     Ok(AchievementData {
         unlocked_achievements: Vec::new(),
@@ -196,22 +196,15 @@ fn apply_save_data(
 ) -> Result<(), String> {
     // 应用玩家数据
     apply_player_data(world, &save_data.player_data)?;
-
-    // 应用世界数据
     apply_world_data(world, &save_data.world_data)?;
-
-    // 应用任务数据
     apply_quest_data(world, &save_data.quest_data)?;
-
-    // 应用成就数据
     apply_achievement_data(world, &save_data.achievement_data)?;
-
     Ok(())
 }
 
 /// 应用玩家数据
 fn apply_player_data(
-    world: &mut World,
+    _world: &mut World,
     player_data: &PlayerData,
 ) -> Result<(), String> {
     // 实际实现需要应用到玩家系统
@@ -221,7 +214,7 @@ fn apply_player_data(
 
 /// 应用世界数据
 fn apply_world_data(
-    world: &mut World,
+    _world: &mut World,
     world_data: &WorldData,
 ) -> Result<(), String> {
     // 实际实现需要应用到世界系统
@@ -231,24 +224,24 @@ fn apply_world_data(
 
 /// 应用任务数据
 fn apply_quest_data(
-    world: &mut World,
+    _world: &mut World,
     quest_data: &QuestData,
 ) -> Result<(), String> {
     // 实际实现需要应用到任务系统
-    info!("应用任务数据: 进行中={}, 已完成={}", 
-        quest_data.active_quests.len(), 
+    info!("应用任务数据: 进行中={}, 已完成={}",
+        quest_data.active_quests.len(),
         quest_data.completed_quests.len());
     Ok(())
 }
 
 /// 应用成就数据
 fn apply_achievement_data(
-    world: &mut World,
+    _world: &mut World,
     achievement_data: &AchievementData,
 ) -> Result<(), String> {
     // 实际实现需要应用到成就系统
-    info!("应用成就数据: 解锁={}, 点数={}", 
-        achievement_data.unlocked_achievements.len(), 
+    info!("应用成就数据: 解锁={}, 点数={}",
+        achievement_data.unlocked_achievements.len(),
         achievement_data.total_points);
     Ok(())
 }

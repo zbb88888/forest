@@ -21,7 +21,7 @@ impl Plugin for PlantUpgradePlugin {
 fn check_upgrade_conditions(
     plant_query: Query<(&Plant, &PlantUpgrade)>,
     inventory: Res<Inventory>,
-    harvest_stats: Res<PlantHarvestStats>,
+    _harvest_stats: Res<PlantHarvestStats>,
 ) {
     for (plant, upgrade) in plant_query.iter() {
         // 检查是否可以升级

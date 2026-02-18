@@ -161,7 +161,7 @@ impl UnlockCondition {
 
 impl Default for PlantVarietyTree {
     fn default() -> Self {
-        let mut unlocked_varieties = vec![PlantType::Grass];
+        let unlocked_varieties = vec![PlantType::Grass];
         let mut unlock_conditions = std::collections::HashMap::new();
 
         // 灌木：需要Level 2，收获10次，消耗100能源

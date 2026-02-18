@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::components::defense::{DefenseWall, DefenseStats};
+use crate::components::player::Player;
 
 /// 防御墙系统插件
 pub struct DefenseWallPlugin;
@@ -16,8 +17,8 @@ impl Plugin for DefenseWallPlugin {
 /// 更新防御墙
 fn update_defense_walls(
     mut commands: Commands,
-    mut wall_query: Query<(Entity, &DefenseWall, &Transform)>,
-    time: Res<Time>,
+    wall_query: Query<(Entity, &DefenseWall, &Transform), Without<Player>>,
+    _time: Res<Time>,
 ) {
     for (entity, wall, transform) in wall_query.iter() {
         // 检查是否被摧毁
@@ -37,7 +38,7 @@ fn update_defense_walls(
 fn update_wall_health(
     mut wall_query: Query<&mut DefenseWall>,
 ) {
-    for mut wall in wall_query.iter_mut() {
+    for _wall in wall_query.iter_mut() {
         // 可以添加自动修复逻辑
         // 例如：每10秒恢复5%的生命值
     }
@@ -106,7 +107,7 @@ pub fn repair_defense_wall(
     amount: f32,
 ) {
     wall.repair(amount);
-    info!("防御墙修理: 恢复={}, 当前生命={}/{}", 
+    info!("防御墙修理: 恢复={}, 当前生命={}/{}",
         amount, wall.health, wall.max_health);
 }
 
@@ -115,7 +116,7 @@ pub fn upgrade_defense_wall(
     wall: &mut DefenseWall,
 ) {
     wall.upgrade();
-    info!("防御墙升级: 等级={}, 生命={}, 防御={}", 
+    info!("防御墙升级: 等级={}, 生命={}, 防御={}",
         wall.level, wall.max_health, wall.defense);
 }
 
@@ -125,7 +126,7 @@ pub fn take_wall_damage(
     damage: f32,
 ) -> f32 {
     let actual_damage = wall.take_damage(damage);
-    info!("防御墙受到伤害: 原始={}, 实际={}, 剩余生命={}/{}", 
+    info!("防御墙受到伤害: 原始={}, 实际={}, 剩余生命={}/{}",
         damage, actual_damage, wall.health, wall.max_health);
     actual_damage
 }

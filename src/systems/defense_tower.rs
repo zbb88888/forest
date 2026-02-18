@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::ecs::event::EventReader;
 use crate::components::defense::{
     DefenseTower, DefenseTowerType, DefenseEffect, DefenseEffectType, DefenseStats
 };
@@ -15,15 +14,15 @@ impl Plugin for DefenseTowerPlugin {
             update_defense_towers,
             update_tower_attacks,
             update_tower_rotation,
-            update_defense_stats,
-        ).chain());
+        ))
+        .add_observer(handle_damage_stats);
     }
 }
 
 /// 更新防御塔
 fn update_defense_towers(
     time: Res<Time>,
-    mut tower_query: Query<(&mut DefenseTower, &Transform)>,
+    mut tower_query: Query<(&mut DefenseTower, &Transform), Without<Enemy>>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
 ) {
     for (mut tower, tower_transform) in tower_query.iter_mut() {
@@ -56,7 +55,7 @@ fn update_defense_towers(
 /// 更新塔攻击
 fn update_tower_attacks(
     mut commands: Commands,
-    mut tower_query: Query<(Entity, &mut DefenseTower, &Transform)>,
+    mut tower_query: Query<(Entity, &mut DefenseTower, &Transform), Without<Enemy>>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
 ) {
     for (tower_entity, mut tower, tower_transform) in tower_query.iter_mut() {
@@ -94,8 +93,8 @@ fn perform_tower_attack(
     tower_entity: Entity,
     target_entity: Entity,
     tower: &DefenseTower,
-    tower_transform: &Transform,
-    target_transform: &Transform,
+    _tower_transform: &Transform,
+    _target_transform: &Transform,
 ) {
     match tower.tower_type {
         DefenseTowerType::ArrowTower => {
@@ -202,8 +201,8 @@ fn perform_tower_attack(
 /// 更新塔旋转
 fn update_tower_rotation(
     time: Res<Time>,
-    mut tower_query: Query<(&DefenseTower, &mut Transform)>,
-    enemy_query: Query<&Transform, With<Enemy>>,
+    mut tower_query: Query<(&DefenseTower, &mut Transform), Without<Enemy>>,
+    enemy_query: Query<&Transform, (With<Enemy>, Without<DefenseTower>)>,
 ) {
     for (tower, mut transform) in tower_query.iter_mut() {
         if let Some(target) = tower.target {
@@ -238,16 +237,14 @@ fn update_tower_rotation(
 }
 
 /// 更新防御统计
-fn update_defense_stats(
-    mut damage_events: EventReader<DamageEvent>,
+fn handle_damage_stats(
+    event: On<DamageEvent>,
     mut tower_query: Query<&mut DefenseStats>,
 ) {
-    for event in damage_events.iter() {
-        // 检查伤害来源是否是防御塔
-        if let Ok(mut stats) = tower_query.get_mut(event.source) {
-            stats.total_damage += event.damage;
-            stats.shots_fired += 1;
-        }
+    let damage_event = event.event();
+    if let Ok(mut stats) = tower_query.get_mut(damage_event.source) {
+        stats.total_damage += damage_event.damage;
+        stats.shots_fired += 1;
     }
 }
 

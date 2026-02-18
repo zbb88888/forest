@@ -3,6 +3,7 @@ use rand::Rng;
 use crate::components::enemy::{
     Enemy, EnemyType, EnemyBase, EnemyPosition, EnemyStatus, EnemySpawnConfig
 };
+use crate::components::player::Player;
 use crate::resources::world::WorldMap;
 
 /// 敌人生成系统插件
@@ -22,7 +23,7 @@ impl Plugin for EnemySpawnPlugin {
 fn update_enemy_spawns(
     time: Res<Time>,
     mut commands: Commands,
-    mut enemy_query: Query<(Entity, &mut EnemyBase, &Transform)>,
+    mut enemy_query: Query<(Entity, &mut EnemyBase, &Transform), Without<Player>>,
     world_map: Res<WorldMap>,
 ) {
     for (entity, mut base, transform) in enemy_query.iter_mut() {
@@ -68,7 +69,7 @@ fn update_enemy_spawns(
                 // 更新生成计数
                 base.current_spawn_count += 1;
 
-                info!("从 {:?} 生成敌人: {:?} at ({}, {})", 
+                info!("从 {:?} 生成敌人: {:?} at ({}, {})",
                     base.base_type, enemy_type, tile_x, tile_y);
             }
         }
@@ -122,7 +123,7 @@ fn spawn_enemy(
     enemy_type: EnemyType,
     tile_x: u32,
     tile_y: u32,
-    base_entity: Option<Entity>,
+    _base_entity: Option<Entity>,
 ) {
     let tile_size = 32.0;
     let pos_x = tile_x as f32 * tile_size;
@@ -158,12 +159,12 @@ fn update_base_spawns(
     // 例如：每X分钟生成一个新的机器人堡垒或AI母巢
 
     // 示例：在地图边缘随机生成敌人
-    let spawn_interval = 60.0; // 每60秒尝试生成一次
+    let _spawn_interval = 60.0; // 每60秒尝试生成一次
     let map_width = world_map.width;
     let map_height = world_map.height;
 
     // 使用时间作为随机种子
-    let seed = (time.elapsed_secs() * 100.0) as u32;
+    let _seed = (time.elapsed_secs() * 100.0) as u32;
     let mut rng = rand::thread_rng();
 
     // 随机选择边缘位置

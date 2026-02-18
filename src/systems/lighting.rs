@@ -21,7 +21,7 @@ impl Default for EnvironmentLighting {
 pub fn update_lighting(
     game_time: Res<GameTime>,
     mut lighting: ResMut<EnvironmentLighting>,
-    mut camera_query: Query<&mut Camera2d>,
+    camera_query: Query<&mut Camera2d>,
 ) {
     // 获取当前光照强度
     let light_intensity = game_time.current_phase.light_intensity(game_time.hour);
@@ -39,10 +39,10 @@ pub fn update_lighting(
     lighting.base_color = light_color;
 
     // 更新相机的背景颜色（模拟昼夜变化）
-    for mut camera in camera_query.iter_mut() {
+    for _camera in camera_query.iter() {
         // 根据光照强度调整背景颜色的亮度
         let light_srgba = light_color.to_srgba();
-        let bg_color = Color::srgb(
+        let _bg_color = Color::srgb(
             light_srgba.red * light_intensity,
             light_srgba.green * light_intensity,
             light_srgba.blue * light_intensity,

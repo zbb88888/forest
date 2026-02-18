@@ -10,7 +10,7 @@ use crate::systems::time::{GameTime, DayPhase};
 pub fn spawn_robot(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<&Transform, With<Player>>,
+    player_query: Query<&Transform, (With<Player>, Without<Robot>)>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Digit1) {
         let Ok(player_transform) = player_query.single() else { return; };
@@ -62,10 +62,10 @@ fn spawn_robot_entity(commands: &mut Commands, robot_type: RobotType, position: 
 pub fn robot_ai_system(
     time: Res<Time>,
     game_time: Res<GameTime>,
-    world_map: Res<WorldMap>,
-    mut query: Query<(Entity, &mut Robot, &RobotAI, &Transform, &mut RobotInventory)>,
-    plant_query: Query<(Entity, &Plant, &Transform), (With<Plantable>, Without<Harvestable>)>,
-    player_query: Query<&Transform, With<Player>>,
+    _world_map: Res<WorldMap>,
+    mut query: Query<(Entity, &mut Robot, &RobotAI, &mut Transform, &mut RobotInventory), Without<Player>>,
+    plant_query: Query<(Entity, &Plant, &Transform), (With<Plantable>, Without<Harvestable>, Without<Robot>)>,
+    player_query: Query<&Transform, (With<Player>, Without<Robot>)>,
     mut player_inventory: ResMut<Inventory>,
     mut commands: Commands,
 ) {
@@ -75,7 +75,7 @@ pub fn robot_ai_system(
         _ => 1.0,
     };
 
-    for (entity, mut robot, ai, mut transform, mut inventory) in query.iter_mut() {
+    for (_entity, mut robot, ai, mut transform, mut inventory) in query.iter_mut() {
         // 消耗能量
         let energy_cost = robot.robot_type.energy_consumption() * time.delta_secs();
         robot.consume_energy(energy_cost);
@@ -91,7 +91,7 @@ pub fn robot_ai_system(
                 match robot.robot_type {
                     RobotType::Harvester => {
                         // 寻找可采集的植物
-                        if let Some((plant_entity, plant_pos)) = find_nearest_plant(&plant_query, transform.translation, ai.detection_radius) {
+                        if let Some((_plant_entity, plant_pos)) = find_nearest_plant(&plant_query, transform.translation, ai.detection_radius) {
                             robot.target_position = Some(plant_pos);
                             robot.current_task = RobotTask::Harvest;
                         }
@@ -178,13 +178,13 @@ pub fn robot_ai_system(
 
 /// 寻找最近的植物
 fn find_nearest_plant(
-    plant_query: &Query<(Entity, &Plant, &Transform), (With<Plantable>, Without<Harvestable>)>,
+    plant_query: &Query<(Entity, &Plant, &Transform), (With<Plantable>, Without<Harvestable>, Without<Robot>)>,
     position: Vec3,
     radius: f32,
 ) -> Option<(Entity, Vec2)> {
     let mut nearest: Option<(Entity, Vec2, f32)> = None;
 
-    for (entity, plant, transform) in plant_query.iter() {
+    for (entity, _plant, transform) in plant_query.iter() {
         let distance = transform.translation.truncate().distance(position.truncate());
         if distance < radius {
             if nearest.is_none() || distance < nearest.unwrap().2 {

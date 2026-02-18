@@ -29,11 +29,11 @@ fn update_quest_timers(
 
 /// 检查任务完成
 fn check_quest_completion(
-    mut commands: Commands,
+    _commands: Commands,
     mut quest_query: Query<(Entity, &mut Quest)>,
     mut quest_log_query: Query<&mut QuestLog>,
 ) {
-    for (entity, mut quest) in quest_query.iter_mut() {
+    for (_entity, mut quest) in quest_query.iter_mut() {
         if quest.status == QuestStatus::InProgress && quest.is_completed() {
             if quest.auto_complete {
                 // 自动完成任务
@@ -52,25 +52,25 @@ fn check_quest_completion(
 /// 更新任务进度
 fn update_quest_progress(
     mut quest_query: Query<&mut Quest>,
-    mut quest_log_query: Query<&mut QuestLog>,
+    quest_log_query: Query<&mut QuestLog>,
     player_query: Query<&Player>,
 ) {
     // 获取玩家信息
-    let player_level = if let Ok(player) = player_query.single() {
+    let _player_level = if let Ok(player) = player_query.single() {
         player.level
     } else {
         1
     };
 
     // 获取已完成任务列表
-    let completed_quests = if let Ok(quest_log) = quest_log_query.single() {
+    let _completed_quests = if let Ok(quest_log) = quest_log_query.single() {
         quest_log.completed_quests.clone()
     } else {
         Vec::new()
     };
 
     // 更新所有进行中的任务
-    for mut quest in quest_query.iter_mut() {
+    for quest in quest_query.iter_mut() {
         if quest.status == QuestStatus::InProgress {
             // 这里可以根据游戏事件更新任务进度
             // 实际实现需要监听游戏事件
@@ -102,7 +102,7 @@ pub fn accept_quest(
 
 /// 完成任务
 pub fn complete_quest(
-    commands: &mut Commands,
+    _commands: &mut Commands,
     quest_id: &str,
     quest_log: &mut QuestLog,
     quest_stats: &mut crate::components::quest::QuestStats,
@@ -124,7 +124,7 @@ pub fn complete_quest(
 
 /// 放弃任务
 pub fn abandon_quest(
-    commands: &mut Commands,
+    _commands: &mut Commands,
     quest_id: &str,
     quest_log: &mut QuestLog,
 ) -> Result<(), String> {

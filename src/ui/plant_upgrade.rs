@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use crate::states::GameState;
-use crate::components::plant_upgrade::{PlantUpgrade, PlantLevel, PlantVarietyTree, PlantHarvestStats};
-use crate::components::plant::Plant;
+use crate::components::plant_upgrade::{PlantUpgrade, PlantVarietyTree, PlantHarvestStats};
 use crate::components::resource::Inventory;
 
 pub struct PlantUpgradeUIPlugin;
@@ -80,9 +79,6 @@ fn spawn_plant_upgrade_panel(commands: &mut Commands) {
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
                 ..default()
-            },
-            Style {
-                gap: Val::Px(10.0),
             },
             BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.9)),
             PlantUpgradePanel,
@@ -188,17 +184,18 @@ fn update_plant_upgrade_panel(
     plant_query: Query<&PlantUpgrade>,
     variety_tree: Res<PlantVarietyTree>,
     harvest_stats: Res<PlantHarvestStats>,
-    inventory: Res<Inventory>,
-    mut level_query: Query<&mut Text, With<PlantLevelText>>,
-    mut variety_query: Query<&mut Text, With<PlantVarietyText>>,
-    mut harvest_query: Query<&mut Text, With<HarvestCountText>>,
+    _inventory: Res<Inventory>,
+    mut text_queries: ParamSet<(
+        Query<&mut Text, With<PlantLevelText>>,
+        Query<&mut Text, With<PlantVarietyText>>,
+        Query<&mut Text, With<HarvestCountText>>,
+    )>,
 ) {
     if !ui_state.is_visible {
         return;
     }
 
-    // 更新植物等级显示
-    if let Some(mut text) = level_query.iter_mut().next() {
+    if let Some(mut text) = text_queries.p0().iter_mut().next() {
         if let Some(upgrade) = ui_state.selected_plant.and_then(|e| plant_query.get(e).ok()) {
             text.0 = format!("等级: {}", upgrade.level.value());
         } else {
@@ -206,8 +203,7 @@ fn update_plant_upgrade_panel(
         }
     }
 
-    // 更新品种信息
-    if let Some(mut text) = variety_query.iter_mut().next() {
+    if let Some(mut text) = text_queries.p1().iter_mut().next() {
         let varieties: Vec<String> = variety_tree.unlocked_varieties
             .iter()
             .map(|v| format!("{:?}", v))
@@ -215,8 +211,7 @@ fn update_plant_upgrade_panel(
         text.0 = format!("已解锁品种: {}", varieties.join(", "));
     }
 
-    // 更新收获统计
-    if let Some(mut text) = harvest_query.iter_mut().next() {
+    if let Some(mut text) = text_queries.p2().iter_mut().next() {
         text.0 = format!("总收获次数: {}", harvest_stats.get_total_harvests());
     }
 }
@@ -266,7 +261,7 @@ fn handle_unlock_button(
     ui_state: Res<PlantUpgradeUIState>,
     mut inventory: ResMut<Inventory>,
     mut variety_tree: ResMut<PlantVarietyTree>,
-    harvest_stats: Res<PlantHarvestStats>,
+    _harvest_stats: Res<PlantHarvestStats>,
     mut unlock_cost_query: Query<&mut Text, With<UnlockCostText>>,
     mut interaction_query: Query<&Interaction, (Changed<Interaction>, With<UnlockButton>)>,
 ) {
@@ -277,7 +272,7 @@ fn handle_unlock_button(
     for interaction in interaction_query.iter_mut() {
         if *interaction == Interaction::Pressed {
             // 简化处理：解锁第一个未解锁的品种
-            for plant_type in [crate::components::plant::PlantType::Bush, 
+            for plant_type in [crate::components::plant::PlantType::Bush,
                              crate::components::plant::PlantType::Flower,
                              crate::components::plant::PlantType::Tree,
                              crate::components::plant::PlantType::EnergyFlower] {
@@ -298,7 +293,7 @@ fn handle_unlock_button(
     // 更新解锁按钮文本
     if let Some(mut text) = unlock_cost_query.iter_mut().next() {
         // 查找第一个未解锁的品种
-        for plant_type in [crate::components::plant::PlantType::Bush, 
+        for plant_type in [crate::components::plant::PlantType::Bush,
                          crate::components::plant::PlantType::Flower,
                          crate::components::plant::PlantType::Tree,
                          crate::components::plant::PlantType::EnergyFlower] {

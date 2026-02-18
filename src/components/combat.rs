@@ -136,7 +136,7 @@ impl Combat {
 }
 
 /// 伤害事件
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Message, Debug, Clone)]
 pub struct DamageEvent {
     pub source: Entity,
     pub target: Entity,
@@ -146,14 +146,14 @@ pub struct DamageEvent {
 }
 
 /// 治疗事件
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Message, Debug, Clone)]
 pub struct HealEvent {
     pub target: Entity,
     pub amount: f32,
 }
 
 /// 死亡事件
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Message, Debug, Clone)]
 pub struct DeathEvent {
     pub entity: Entity,
 }

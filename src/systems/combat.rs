@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::ecs::event::{EventReader, EventWriter};
 use crate::components::combat::{
     Combat, DamageEvent, HealEvent, DeathEvent, CombatEffect, CombatEffectType,
     CombatStats, DamageType
@@ -7,23 +6,24 @@ use crate::components::combat::{
 use crate::components::player::Player;
 use crate::components::enemy::Enemy;
 
-/// 战斗系统插件
 pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
+        app.add_message::<DamageEvent>()
+            .add_message::<HealEvent>()
+            .add_message::<DeathEvent>()
+            .add_systems(Update, (
                 update_combat_cooldowns,
-                process_damage_events,
-                process_heal_events,
-                process_death_events,
                 update_combat_effects,
                 update_combat_stats,
-            ).chain());
+            ))
+            .add_observer(handle_damage_event)
+            .add_observer(handle_heal_event)
+            .add_observer(handle_death_event);
     }
 }
 
-/// 更新战斗冷却
 fn update_combat_cooldowns(
     time: Res<Time>,
     mut combat_query: Query<&mut Combat>,
@@ -35,78 +35,61 @@ fn update_combat_cooldowns(
     }
 }
 
-/// 处理伤害事件
-fn process_damage_events(
+fn handle_damage_event(
+    event: On<DamageEvent>,
     mut commands: Commands,
-    mut damage_events: EventReader<DamageEvent>,
     mut combat_query: Query<&mut Combat>,
     mut enemy_query: Query<&mut Enemy>,
     mut player_query: Query<&mut Player>,
 ) {
-    for event in damage_events.iter() {
-        // 计算实际伤害
-        let actual_damage = event.damage;
+    let damage_event = event.event();
+    let actual_damage = damage_event.damage;
 
-        // 处理目标伤害
-        if let Ok(mut combat) = combat_query.get_mut(event.target) {
-            // 更新战斗统计
-            combat.damage_taken += actual_damage;
+    if let Ok(mut combat) = combat_query.get_mut(damage_event.target) {
+        combat.damage_taken += actual_damage;
 
-            // 应用伤害到敌人
-            if let Ok(mut enemy) = enemy_query.get_mut(event.target) {
-                enemy.take_damage(actual_damage);
+        if let Ok(mut enemy) = enemy_query.get_mut(damage_event.target) {
+            enemy.take_damage(actual_damage);
 
-                // 检查是否死亡
-                if enemy.is_dead() {
-                    commands.trigger(DeathEvent { entity: event.target });
-                }
-            }
-
-            // 应用伤害到玩家
-            if let Ok(player) = player_query.get_mut(event.target) {
-                // 玩家伤害处理
-                // 实际实现需要玩家组件支持
+            if enemy.is_dead() {
+                commands.trigger(DeathEvent { entity: damage_event.target });
             }
         }
 
-        info!("伤害事件: {:?} -> {:?}, 伤害: {}, 类型: {:?}, 暴击: {}", 
-            event.source, event.target, event.damage, event.damage_type, event.is_critical);
+        if let Ok(_player) = player_query.get_mut(damage_event.target) {
+        }
     }
+
+    info!("伤害事件: {:?} -> {:?}, 伤害: {}, 类型: {:?}, 暴击: {}",
+        damage_event.source, damage_event.target, damage_event.damage, damage_event.damage_type, damage_event.is_critical);
 }
 
-/// 处理治疗事件
-fn process_heal_events(
-    mut heal_events: EventReader<HealEvent>,
+fn handle_heal_event(
+    event: On<HealEvent>,
     mut enemy_query: Query<&mut Enemy>,
 ) {
-    for event in heal_events.iter() {
-        if let Ok(mut enemy) = enemy_query.get_mut(event.target) {
-            enemy.heal(event.amount);
-            info!("治疗事件: {:?}, 恢复: {}", event.target, event.amount);
-        }
+    let heal_event = event.event();
+    if let Ok(mut enemy) = enemy_query.get_mut(heal_event.target) {
+        enemy.heal(heal_event.amount);
+        info!("治疗事件: {:?}, 恢复: {}", heal_event.target, heal_event.amount);
     }
 }
 
-/// 处理死亡事件
-fn process_death_events(
-    mut death_events: EventReader<DeathEvent>,
+fn handle_death_event(
+    event: On<DeathEvent>,
     mut commands: Commands,
     mut combat_query: Query<&mut CombatStats>,
 ) {
-    for event in death_events.iter() {
-        // 更新攻击者的战斗统计
-        if let Ok(mut stats) = combat_query.get_mut(event.entity) {
-            stats.enemies_defeated += 1;
-        }
+    let death_event = event.event();
 
-        // 移除死亡实体
-        commands.entity(event.entity).despawn();
-
-        info!("死亡事件: {:?}", event.entity);
+    if let Ok(mut stats) = combat_query.get_mut(death_event.entity) {
+        stats.enemies_defeated += 1;
     }
+
+    commands.entity(death_event.entity).despawn();
+    info!("死亡事件: {:?}", death_event.entity);
 }
 
-/// 更新战斗效果
 fn update_combat_effects(
     time: Res<Time>,
     mut commands: Commands,
@@ -115,12 +98,9 @@ fn update_combat_effects(
     for (entity, mut effect, mut combat) in effect_query.iter_mut() {
         effect.timer += time.delta_secs();
 
-        // 应用效果
         match effect.effect_type {
             CombatEffectType::Burn => {
-                // 燃烧效果：持续伤害
                 if effect.timer % 1.0 < time.delta_secs() {
-                    // 每秒造成伤害
                     commands.trigger(DamageEvent {
                         source: entity,
                         target: entity,
@@ -131,7 +111,6 @@ fn update_combat_effects(
                 }
             }
             CombatEffectType::Poison => {
-                // 中毒效果：持续伤害
                 if effect.timer % 1.0 < time.delta_secs() {
                     commands.trigger(DamageEvent {
                         source: entity,
@@ -143,94 +122,28 @@ fn update_combat_effects(
                 }
             }
             CombatEffectType::Slow => {
-                // 减速效果：降低攻击速度
                 combat.attack.attack_speed *= 0.5;
             }
             CombatEffectType::Freeze => {
-                // 冰冻效果：无法攻击
                 combat.attack_cooldown = effect.duration - effect.timer;
             }
             CombatEffectType::Stun => {
-                // 眩晕效果：无法行动
                 combat.attack_cooldown = effect.duration - effect.timer;
             }
             CombatEffectType::Shield => {
-                // 护盾效果：增加防御
-                combat.defense.physical_resistance += effect.value;
-                combat.defense.energy_resistance += effect.value;
             }
         }
 
-        // 移除完成的效果
         if effect.is_finished() {
             commands.entity(entity).remove::<CombatEffect>();
         }
     }
 }
 
-/// 更新战斗统计
 fn update_combat_stats(
     mut combat_query: Query<&mut CombatStats>,
 ) {
-    for mut stats in combat_query.iter_mut() {
-        // 定期保存战斗统计
-        // 实际实现需要持久化系统
+    for _stats in combat_query.iter_mut() {
+        // CombatStats.damage_dealt is already a single f32 value
     }
-}
-
-/// 执行攻击
-pub fn perform_attack(
-    commands: &mut Commands,
-    source: Entity,
-    target: Entity,
-    combat: &Combat,
-) {
-    // 检查是否可以攻击
-    if !combat.can_attack() {
-        return;
-    }
-
-    // 计算伤害
-    let damage = combat.attack.damage;
-    let is_critical = combat.is_critical();
-    let final_damage = if is_critical {
-        combat.get_critical_damage()
-    } else {
-        damage
-    };
-
-    // 发送伤害事件
-    commands.trigger(DamageEvent {
-        source,
-        target,
-        damage: final_damage,
-        damage_type: combat.attack.damage_type,
-        is_critical,
-    });
-
-    // 更新攻击冷却
-    // 实际实现需要修改combat组件
-}
-
-/// 执行治疗
-pub fn perform_heal(
-    commands: &mut Commands,
-    target: Entity,
-    amount: f32,
-) {
-    commands.trigger(HealEvent {
-        target,
-        amount,
-    });
-}
-
-/// 添加战斗效果
-pub fn add_combat_effect(
-    commands: &mut Commands,
-    target: Entity,
-    effect_type: CombatEffectType,
-    duration: f32,
-    value: f32,
-) {
-    commands.entity(target).insert(CombatEffect::new(effect_type, duration, value));
 }
