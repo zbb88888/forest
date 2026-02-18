@@ -1,95 +1,58 @@
 use bevy::prelude::*;
+use bevy::sprite_render::prelude::*;
+use bevy::mesh::Mesh;
 use crate::components::enemy::{EnemyBase, EnemyType, EnemyPosition, Enemy};
-use crate::systems::enemy_spawn::{spawn_enemy_at, spawn_base_at};
+use crate::systems::enemy_spawn::EnemyRenderAssets;
 
-/// 敌人大本营系统插件
 pub struct EnemyBasePlugin;
 
 impl Plugin for EnemyBasePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
-            update_base_health,
-            update_base_spawning,
-            handle_base_destruction,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+        app.add_systems(Update, update_base_spawning);
     }
 }
 
-/// 更新基地生命
-fn update_base_health(
-    _commands: Commands,
-    mut base_query: Query<(Entity, &mut EnemyBase, &mut EnemyPosition), Without<Enemy>>,
-    _time: Res<Time>,
-) {
-    for (_entity, base, _position) in base_query.iter_mut() {
-        // 检查基地是否需要恢复
-        // 可以添加逻辑让基地在一定条件下恢复生命
-        // 例如：每30秒恢复10%的生命值
-
-        // 检查基地是否被摧毁
-        if base.current_spawn_count >= base.max_spawn_count {
-            // 基地耗尽生成能力，可以添加特殊效果
-        }
-    }
-}
-
-/// 更新基地生成
 fn update_base_spawning(
     time: Res<Time>,
     mut base_query: Query<(Entity, &mut EnemyBase, &Transform), Without<Enemy>>,
     mut commands: Commands,
+    assets: Res<EnemyRenderAssets>,
 ) {
     for (_entity, mut base, transform) in base_query.iter_mut() {
         if !base.active {
             continue;
         }
 
-        // 更新生成计时器
-        base.spawn_timer += time.delta_secs();
+        base.spawn_timer += time.delta().as_secs_f32();
 
-        // 检查是否可以生成
-        if base.spawn_timer >= base.spawn_interval && base.can_spawn() {
+        if base.spawn_timer >= base.spawn_interval {
             base.spawn_timer = 0.0;
 
-            // 获取可以生成的敌人类型
-            let spawn_types = base.get_spawn_types();
-            if spawn_types.is_empty() {
-                continue;
-            }
-
-            // 根据基地类型选择生成策略
             match base.base_type {
                 EnemyType::RobotFortress => {
-                    // 机器人堡垒生成策略
-                    spawn_from_fortress(&mut commands, &base, transform);
+                    spawn_from_fortress(&mut commands, &base, transform, &assets);
                 }
                 EnemyType::AIMotherBase => {
-                    // AI母巢生成策略
-                    spawn_from_mother_base(&mut commands, &base, transform);
+                    spawn_from_mother_base(&mut commands, &base, transform, &assets);
                 }
                 _ => {}
             }
-
-            // 更新生成计数
-            base.current_spawn_count += 1;
         }
     }
 }
 
-/// 从机器人堡垒生成敌人
 fn spawn_from_fortress(
     commands: &mut Commands,
     base: &EnemyBase,
     transform: &Transform,
+    assets: &EnemyRenderAssets,
 ) {
     use rand::Rng;
     let mut rng = rand::thread_rng();
 
-    // 机器人堡垒生成机器人敌人
     let spawn_types = base.get_spawn_types();
     let enemy_type = spawn_types[rng.gen_range(0..spawn_types.len())];
 
-    // 计算生成位置
     let tile_size = 32.0;
     let spawn_range = base.spawn_range;
     let angle = rng.gen_range(0.0..std::f32::consts::PI * 2.0);
@@ -101,25 +64,34 @@ fn spawn_from_fortress(
     let tile_x = ((transform.translation.x + offset_x) / tile_size).round() as u32;
     let tile_y = ((transform.translation.y + offset_y) / tile_size).round() as u32;
 
-    spawn_enemy_at(commands, enemy_type, tile_x, tile_y);
+    commands.spawn((
+        bevy::mesh::Mesh2d(assets.enemy_mesh.clone()),
+        MeshMaterial2d(assets.enemy_material.clone()),
+        Transform::from_xyz(
+            transform.translation.x + offset_x,
+            transform.translation.y + offset_y,
+            1.0
+        ),
+        GlobalTransform::default(),
+        Enemy::new(enemy_type, 1),
+        EnemyPosition { tile_x, tile_y },
+    ));
 
     info!("从机器人堡垒生成: {:?} at ({}, {})", enemy_type, tile_x, tile_y);
 }
 
-/// 从AI母巢生成敌人
 fn spawn_from_mother_base(
     commands: &mut Commands,
     base: &EnemyBase,
     transform: &Transform,
+    assets: &EnemyRenderAssets,
 ) {
     use rand::Rng;
     let mut rng = rand::thread_rng();
 
-    // AI母巢可以生成更多类型的敌人
     let spawn_types = base.get_spawn_types();
     let enemy_type = spawn_types[rng.gen_range(0..spawn_types.len())];
 
-    // 计算生成位置
     let tile_size = 32.0;
     let spawn_range = base.spawn_range;
     let angle = rng.gen_range(0.0..std::f32::consts::PI * 2.0);
@@ -131,41 +103,33 @@ fn spawn_from_mother_base(
     let tile_x = ((transform.translation.x + offset_x) / tile_size).round() as u32;
     let tile_y = ((transform.translation.y + offset_y) / tile_size).round() as u32;
 
-    spawn_enemy_at(commands, enemy_type, tile_x, tile_y);
+    commands.spawn((
+        bevy::mesh::Mesh2d(assets.enemy_mesh.clone()),
+        MeshMaterial2d(assets.enemy_material.clone()),
+        Transform::from_xyz(
+            transform.translation.x + offset_x,
+            transform.translation.y + offset_y,
+            1.0
+        ),
+        GlobalTransform::default(),
+        Enemy::new(enemy_type, 1),
+        EnemyPosition { tile_x, tile_y },
+    ));
 
     info!("从AI母巢生成: {:?} at ({}, {})", enemy_type, tile_x, tile_y);
 }
 
-/// 处理基地摧毁
-fn handle_base_destruction(
-    _commands: Commands,
-    mut base_query: Query<(Entity, &EnemyBase, &Transform), Without<Enemy>>,
-) {
-    for (_entity, _base, _transform) in base_query.iter_mut() {
-        // 检查基地是否被摧毁
-        // 实际实现需要检查基地的生命值
-        // 这里只是示例
-
-        // 如果基地被摧毁：
-        // 1. 播放摧毁效果
-        // 2. 掉落奖励
-        // 3. 可能生成新的基地
-    }
-}
-
-/// 初始化敌人大本营
 pub fn initialize_enemy_bases(
     commands: &mut Commands,
     map_width: u32,
     map_height: u32,
+    assets: &EnemyRenderAssets,
 ) {
     use rand::Rng;
     let mut rng = rand::thread_rng();
 
-    // 在地图边缘生成机器人堡垒
     let fortress_count = 2;
     for _ in 0..fortress_count {
-        // 随机选择边缘位置
         let edge = rng.gen_range(0..4);
         let (tile_x, tile_y) = match edge {
             0 => (rng.gen_range(0..map_width), 0),
@@ -175,10 +139,19 @@ pub fn initialize_enemy_bases(
             _ => (0, 0),
         };
 
-        spawn_base_at(commands, EnemyType::RobotFortress, tile_x, tile_y);
+        let pos_x = tile_x as f32 * 32.0;
+        let pos_y = tile_y as f32 * 32.0;
+
+        commands.spawn((
+            bevy::mesh::Mesh2d(assets.base_mesh.clone()),
+            MeshMaterial2d(assets.fortress_material.clone()),
+            Transform::from_xyz(pos_x, pos_y, 0.5),
+            GlobalTransform::default(),
+            EnemyBase::new(EnemyType::RobotFortress),
+            EnemyPosition { tile_x, tile_y },
+        ));
     }
 
-    // 在地图中心附近生成AI母巢
     let center_x = map_width / 2;
     let center_y = map_height / 2;
     let offset = rng.gen_range(5..10);
@@ -193,10 +166,15 @@ pub fn initialize_enemy_bases(
         center_y - offset
     };
 
-    spawn_base_at(
-        commands,
-        EnemyType::AIMotherBase,
-        mother_base_x.min(map_width - 1),
-        mother_base_y.min(map_height - 1),
-    );
+    let pos_x = mother_base_x.min(map_width - 1) as f32 * 32.0;
+    let pos_y = mother_base_y.min(map_height - 1) as f32 * 32.0;
+
+    commands.spawn((
+        bevy::mesh::Mesh2d(assets.base_mesh.clone()),
+        MeshMaterial2d(assets.mother_base_material.clone()),
+        Transform::from_xyz(pos_x, pos_y, 0.5),
+        GlobalTransform::default(),
+        EnemyBase::new(EnemyType::AIMotherBase),
+        EnemyPosition { tile_x: mother_base_x.min(map_width - 1), tile_y: mother_base_y.min(map_height - 1) },
+    ));
 }

@@ -90,6 +90,16 @@ impl Default for WorldMap {
 }
 
 impl WorldMap {
+    pub fn new(width: u32, height: u32, tiles: Vec<Vec<MapTile>>, fog_of_war: bool, seed: u64) -> Self {
+        Self {
+            width,
+            height,
+            tiles,
+            fog_of_war,
+            seed,
+        }
+    }
+
     /// 获取指定位置的瓦片
     pub fn get_tile(&self, x: u32, y: u32) -> Option<&MapTile> {
         if x < self.width && y < self.height {

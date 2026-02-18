@@ -17,7 +17,7 @@ use systems::plant_upgrade::PlantUpgradePlugin;
 use systems::crafting::CraftingPlugin;
 use systems::building::BuildingPlugin;
 use systems::enemy::EnemyPlugin;
-use systems::enemy_spawn::EnemySpawnPlugin;
+use systems::enemy_spawn::{EnemySpawnPlugin, init_enemy_assets, EnemyRenderAssets};
 use systems::enemy_attack::EnemyAttackPlugin;
 use systems::enemy_base::EnemyBasePlugin;
 use systems::combat::CombatPlugin;
@@ -34,6 +34,8 @@ use systems::achievement_events::AchievementEventsPlugin;
 use systems::achievement_generator::AchievementGeneratorPlugin;
 use systems::save_manager::SaveManagerPlugin;
 use systems::save_ui::SaveUIPlugin;
+use systems::map::{init_map_assets, MapRenderAssets};
+use systems::player::{init_player_assets, PlayerRenderAssets};
 
 fn main() {
     std::panic::set_hook(Box::new(|info| {
@@ -55,6 +57,7 @@ fn main() {
             next_state.set(GameState::InGame);
         })
         .add_systems(Startup, setup)
+        .add_systems(Startup, init_render_assets)
         .add_systems(Startup, systems::time::init_game_time)
         .add_systems(Startup, systems::lighting::init_lighting)
         .add_plugins(PlantUpgradePlugin)
@@ -83,6 +86,23 @@ fn main() {
         .add_plugins(SaveUIPlugin)
         .add_systems(OnEnter(GameState::InGame), (systems::map::setup_map, systems::player::spawn_player).chain())
         .run();
+}
+
+fn init_render_assets(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    let map_assets = init_map_assets(&mut meshes, &mut materials);
+    commands.insert_resource(map_assets);
+
+    let player_assets = init_player_assets(&mut meshes, &mut materials);
+    commands.insert_resource(player_assets);
+
+    let enemy_assets = init_enemy_assets(&mut meshes, &mut materials);
+    commands.insert_resource(enemy_assets);
+
+    info!("Render assets initialized");
 }
 
 fn setup(mut commands: Commands) {

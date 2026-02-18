@@ -1,17 +1,25 @@
 use bevy::prelude::*;
-use bevy_sprite_render::ColorMaterial;
-use bevy_mesh::Mesh2d;
+use bevy::sprite_render::prelude::*;
+use bevy::mesh::Mesh2d;
+use bevy::mesh::Mesh;
 use crate::resources::world::WorldMap;
 use crate::components::player::Player;
 use crate::components::resource::Inventory;
 use crate::components::equipment::EquipmentBar;
 use crate::components::enemy::Enemy;
+use crate::systems::map::MapRenderAssets;
 use rand::Rng;
 
-// Spawn player at map center
+#[derive(Resource)]
+pub struct PlayerRenderAssets {
+    pub player_mesh: Handle<Mesh>,
+    pub player_material: Handle<ColorMaterial>,
+}
+
 pub fn spawn_player(
     mut commands: Commands,
     world_map: Res<WorldMap>,
+    assets: Res<PlayerRenderAssets>,
 ) {
     let center_x = world_map.width / 2;
     let center_y = world_map.height / 2;
@@ -23,7 +31,6 @@ pub fn spawn_player(
     let pos_x = offset_x + center_x as f32 * tile_size;
     let pos_y = offset_y + center_y as f32 * tile_size;
 
-    // Bevy 0.18: Use ColorMaterial and Mesh2d for 2D rendering
     commands.spawn((
         Player {
             id: 0,
@@ -33,26 +40,24 @@ pub fn spawn_player(
         Inventory {
             metal: 0,
             soil: 0,
-            energy: 100, // Initial energy
+            energy: 100,
         },
         EquipmentBar::default(),
-        ColorMaterial::from_color(Color::srgb(1.0, 0.0, 0.0)), // Red player
-        Mesh2d::default(),
-        Transform::from_xyz(pos_x, pos_y, 1.0), // Z=1
+        Mesh2d(assets.player_mesh.clone()),
+        MeshMaterial2d(assets.player_material.clone()),
+        Transform::from_xyz(pos_x, pos_y, 1.0),
         GlobalTransform::default(),
     ));
 
     info!("Player spawned at ({}, {}) [World: {:.1}, {:.1}]", center_x, center_y, pos_x, pos_y);
 }
 
-// System to randomly move player every 1.0s (Simulating input/movement)
 pub fn move_player_randomly(
     time: Res<Time>,
     mut timer: Local<Timer>,
     mut query: Query<(&Player, &mut Transform, &Inventory), Without<Enemy>>,
     world_map: Res<WorldMap>,
 ) {
-    // Initialize timer if first run
     if timer.duration() == std::time::Duration::ZERO {
         *timer = Timer::from_seconds(1.0, TimerMode::Repeating);
     }
@@ -63,7 +68,6 @@ pub fn move_player_randomly(
         let mut rng = rand::thread_rng();
 
         for (player, mut transform, inventory) in query.iter_mut() {
-            // Random direction: 0=Up, 1=Down, 2=Left, 3=Right
             let direction = rng.gen_range(0..4);
             let mut new_x = transform.translation.x;
             let mut new_y = transform.translation.y;
@@ -76,12 +80,9 @@ pub fn move_player_randomly(
                 _ => {}
             }
 
-            // Bounds check
             if new_x >= 0.0 && new_x < world_map.width as f32 &&
                new_y >= 0.0 && new_y < world_map.height as f32 {
 
-                // Update Logical Position (Grid) - Not stored in component yet, but logged
-                // Update Visual Position (Transform)
                 let tile_size = 32.0;
                 let offset_x = -(world_map.width as f32 * tile_size) / 2.0 + tile_size / 2.0;
                 let offset_y = -(world_map.height as f32 * tile_size) / 2.0 + tile_size / 2.0;
@@ -95,5 +96,18 @@ pub fn move_player_randomly(
                 info!("Player {} hit wall at ({:.0}, {:.0})", player.name, new_x, new_y);
             }
         }
+    }
+}
+
+pub fn init_player_assets(
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<ColorMaterial>>,
+) -> PlayerRenderAssets {
+    let player_mesh = meshes.add(Rectangle::new(25.0, 25.0));
+    let player_material = materials.add(ColorMaterial::from_color(Color::srgb(1.0, 0.0, 0.0)));
+
+    PlayerRenderAssets {
+        player_mesh,
+        player_material,
     }
 }
