@@ -68,7 +68,7 @@ impl MapTile {
 }
 
 /// 世界地图
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct WorldMap {
     pub width: u32,
     pub height: u32,

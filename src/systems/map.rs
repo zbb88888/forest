@@ -106,9 +106,10 @@ pub fn setup_map(
     }
 
     let world_map = WorldMap::new(width, height, tiles, true, 42);
+    let world_map_clone = world_map.clone();
     commands.insert_resource(world_map);
 
-    spawn_environment_decorations(&mut commands, &assets, width, height, tile_size, offset_x, offset_y);
+    spawn_environment_decorations(&mut commands, &assets, &world_map_clone, width, height, tile_size, offset_x, offset_y);
 
     info!("WorldMap resource initialized with Native Sprite Rendering");
 }
@@ -116,6 +117,7 @@ pub fn setup_map(
 fn spawn_environment_decorations(
     commands: &mut Commands,
     assets: &MapRenderAssets,
+    world_map: &WorldMap,
     width: u32,
     height: u32,
     tile_size: f32,
@@ -129,15 +131,28 @@ fn spawn_environment_decorations(
             let world_x = offset_x + x as f32 * tile_size;
             let world_y = offset_y + y as f32 * tile_size;
 
-            let rand_val = rng.gen_range(0..100);
+            let tile = world_map.get_tile(x, y).unwrap_or_else(|| {
+                world_map.tiles[y as usize].get(x as usize).unwrap()
+            });
 
-            if rand_val < 15 {
+            let can_spawn_tree = matches!(tile.tile_type, TileType::Forest | TileType::DarkForest | TileType::Grass);
+            let can_spawn_tower = matches!(tile.tile_type, TileType::Desert | TileType::Mountain | TileType::Grass);
+            let can_spawn_cable = matches!(tile.tile_type, TileType::Grass | TileType::Forest);
+            let can_spawn_ruins = matches!(tile.tile_type, TileType::Desert | TileType::Mountain);
+
+            if can_spawn_tree && rng.gen_range(0..100) < 12 {
                 spawn_metal_tree(commands, assets, world_x, world_y);
-            } else if rand_val < 25 {
+            }
+
+            if can_spawn_tower && rng.gen_range(0..100) < 6 {
                 spawn_cooling_tower(commands, assets, world_x, world_y);
-            } else if rand_val < 35 {
+            }
+
+            if can_spawn_cable && rng.gen_range(0..100) < 8 {
                 spawn_circuit_cable(commands, assets, world_x, world_y);
-            } else if rand_val < 40 {
+            }
+
+            if can_spawn_ruins && rng.gen_range(0..100) < 4 {
                 spawn_ruins(commands, assets, world_x, world_y);
             }
         }
@@ -145,10 +160,11 @@ fn spawn_environment_decorations(
 }
 
 fn spawn_metal_tree(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
+    let z = 10.0 - y * 0.01;
     commands.spawn((
         Mesh2d(assets.tile_mesh.clone()),
         MeshMaterial2d(assets.metal_tree_material.clone()),
-        Transform::from_xyz(x, y, 10.0).with_scale(Vec3::new(0.8, 1.2, 1.0)),
+        Transform::from_xyz(x, y, z).with_scale(Vec3::new(0.8, 1.2, 1.0)),
         MetalTree {
             jitter_timer: 0.0,
             pulse_phase: rand::thread_rng().gen_range(0.0..std::f32::consts::TAU),
@@ -160,10 +176,11 @@ fn spawn_metal_tree(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y
 }
 
 fn spawn_cooling_tower(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
+    let z = 10.0 - y * 0.01;
     commands.spawn((
         Mesh2d(assets.tile_mesh.clone()),
         MeshMaterial2d(assets.cooling_tower_material.clone()),
-        Transform::from_xyz(x, y, 10.0).with_scale(Vec3::new(1.5, 2.0, 1.0)),
+        Transform::from_xyz(x, y, z).with_scale(Vec3::new(1.5, 2.0, 1.0)),
         CoolingTower {
             heat_level: 0.0,
             pulse_timer: 0.0,
@@ -175,6 +192,7 @@ fn spawn_cooling_tower(commands: &mut Commands, assets: &MapRenderAssets, x: f32
 }
 
 fn spawn_circuit_cable(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
+    let z = 5.0 - y * 0.01;
     let direction = Vec2::new(
         rand::thread_rng().gen_range(-1.0..1.0),
         rand::thread_rng().gen_range(-1.0..1.0),
@@ -183,7 +201,7 @@ fn spawn_circuit_cable(commands: &mut Commands, assets: &MapRenderAssets, x: f32
     commands.spawn((
         Mesh2d(assets.tile_mesh.clone()),
         MeshMaterial2d(assets.circuit_cable_material.clone()),
-        Transform::from_xyz(x, y, 5.0).with_scale(Vec3::new(2.0, 0.2, 1.0)),
+        Transform::from_xyz(x, y, z).with_scale(Vec3::new(2.0, 0.2, 1.0)),
         CircuitCable {
             flow_direction: direction,
             pulse_speed: 2.0,
@@ -195,10 +213,11 @@ fn spawn_circuit_cable(commands: &mut Commands, assets: &MapRenderAssets, x: f32
 }
 
 fn spawn_ruins(commands: &mut Commands, assets: &MapRenderAssets, x: f32, y: f32) {
+    let z = 10.0 - y * 0.01;
     commands.spawn((
         Mesh2d(assets.tile_mesh.clone()),
         MeshMaterial2d(assets.ruins_material.clone()),
-        Transform::from_xyz(x, y, 10.0).with_scale(Vec3::new(0.6, 0.6, 1.0)),
+        Transform::from_xyz(x, y, z).with_scale(Vec3::new(0.6, 0.6, 1.0)),
         EnvironmentDecoration {
             decoration_type: DecorationType::Ruins,
         },
@@ -244,7 +263,7 @@ pub fn update_environment_animations(
         transform.scale.y = 2.0 + pulse;
     }
 
-    for (mut cable, mut transform) in circuit_cables.iter_mut() {
+    for (cable, mut transform) in circuit_cables.iter_mut() {
         let flow_speed = if is_night { 3.0 } else { 0.5 };
         let offset = (time.elapsed_secs() * flow_speed) % 2.0;
 
