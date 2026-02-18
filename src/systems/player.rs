@@ -25,6 +25,7 @@ pub fn spawn_player(
         Player {
             id: 0,
             name: "Administrator".into(),
+            level: 1,
         },
         Inventory {
             metal: 0,

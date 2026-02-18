@@ -99,8 +99,15 @@ pub fn unlock_plant_variety(
     }
 
     // 获取解锁条件
-    let condition = variety_tree.unlock_conditions.get(&plant_type)
-        .ok_or_else(|| "Unlock condition not found".to_string())?;
+    let energy_cost = variety_tree.unlock_conditions.get(&plant_type)
+        .ok_or_else(|| "Unlock condition not found".to_string())?
+        .energy_cost;
+    let required_level = variety_tree.unlock_conditions.get(&plant_type)
+        .ok_or_else(|| "Unlock condition not found".to_string())?
+        .required_level;
+    let required_harvests = variety_tree.unlock_conditions.get(&plant_type)
+        .ok_or_else(|| "Unlock condition not found".to_string())?
+        .required_harvests;
 
     // 检查是否满足条件
     // 这里简化处理，实际应该检查玩家最高等级
@@ -111,14 +118,14 @@ pub fn unlock_plant_variety(
         return Err(format!(
             "Cannot unlock {:?}. Need level {:?}, {} harvests, and {} energy",
             plant_type,
-            condition.required_level,
-            condition.required_harvests,
-            condition.energy_cost
+            required_level,
+            required_harvests,
+            energy_cost
         ));
     }
 
     // 扣除能源
-    inventory.energy -= condition.energy_cost;
+    inventory.energy -= energy_cost;
 
     // 解锁品种
     if variety_tree.unlock(plant_type) {
@@ -126,7 +133,7 @@ pub fn unlock_plant_variety(
         Ok(true)
     } else {
         // 解锁失败，返还能源
-        inventory.energy += condition.energy_cost;
+        inventory.energy += energy_cost;
         Err("Failed to unlock plant variety".to_string())
     }
 }

@@ -30,6 +30,16 @@ impl Inventory {
             crate::components::crafting::MaterialType::Organic => 0,
         }
     }
+
+    pub fn remove_material(&mut self, material_type: crate::components::crafting::MaterialType, amount: u32) {
+        match material_type {
+            crate::components::crafting::MaterialType::Energy => self.energy = self.energy.saturating_sub(amount),
+            crate::components::crafting::MaterialType::Metal => self.metal = self.metal.saturating_sub(amount),
+            crate::components::crafting::MaterialType::Soil => self.soil = self.soil.saturating_sub(amount),
+            crate::components::crafting::MaterialType::Crystal => {},
+            crate::components::crafting::MaterialType::Organic => {},
+        }
+    }
 }
 
 #[derive(Component, Debug)]

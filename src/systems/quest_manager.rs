@@ -40,7 +40,7 @@ fn check_quest_completion(
                 quest.complete();
 
                 // 更新任务日志
-                let Ok(mut quest_log) = quest_log_query.single_mut();
+                let Ok(mut quest_log) = quest_log_query.single_mut() else { continue; };
                 quest_log.complete_quest(&quest.id);
 
                 info!("任务自动完成: {}", quest.title);
@@ -151,7 +151,7 @@ pub fn set_current_quest(
     quest_log: &mut QuestLog,
     quest_id: Option<String>,
 ) {
-    quest_log.set_current_quest(quest_id);
+    quest_log.set_current_quest(quest_id.clone());
     info!("设置当前追踪任务: {:?}", quest_id);
 }
 

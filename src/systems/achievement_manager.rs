@@ -52,7 +52,7 @@ fn check_achievements(
             achievement.unlock();
 
             // 更新成就日志
-            let mut log = achievement_log_query.single_mut();
+            let Ok(mut log) = achievement_log_query.single_mut() else { continue; };
             log.unlock_achievement(achievement.id.clone(), achievement.points);
 
             info!("成就解锁: {} ({})", achievement.title, achievement.id);

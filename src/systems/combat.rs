@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::ecs::event::{EventReader, EventWriter};
 use crate::components::combat::{
     Combat, DamageEvent, HealEvent, DeathEvent, CombatEffect, CombatEffectType,
     CombatStats, DamageType
@@ -12,17 +11,14 @@ pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<DamageEvent>()
-            .add_event::<HealEvent>()
-            .add_event::<DeathEvent>()
-            .add_systems(Update, (
+        app.add_systems(Update, (
                 update_combat_cooldowns,
                 process_damage_events,
-                process_heal_events.run_if(in_state(crate::states::GameState::InGame)),
-                process_death_events.run_if(in_state(crate::states::GameState::InGame)),
-                update_combat_effects.run_if(in_state(crate::states::GameState::InGame)),
-                update_combat_stats.run_if(in_state(crate::states::GameState::InGame)),
-            ));
+                process_heal_events,
+                process_death_events,
+                update_combat_effects,
+                update_combat_stats,
+            ).chain());
     }
 }
 

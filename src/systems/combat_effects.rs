@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::ecs::event::EventReader;
 use crate::components::combat::{
     DamageEvent, HealEvent, DeathEvent, CombatEffect, CombatEffectType
 };
@@ -14,7 +13,7 @@ impl Plugin for CombatEffectsPlugin {
             spawn_heal_effects,
             spawn_death_effects,
             update_combat_effect_visuals,
-        ).run_if(in_state(crate::states::GameState::InGame)));
+        ).chain());
     }
 }
 

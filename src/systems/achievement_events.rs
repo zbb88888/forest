@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::ecs::event::{EventReader, EventWriter};
 use crate::components::achievement::{Achievement, AchievementCondition, AchievementLog};
 
 /// 成就事件系统插件
@@ -7,10 +6,9 @@ pub struct AchievementEventsPlugin;
 
 impl Plugin for AchievementEventsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<AchievementProgressEvent>()
-            .add_systems(Update, (
-                handle_achievement_progress_events.run_if(in_state(crate::states::GameState::InGame)),
-            ));
+        app.add_systems(Update, (
+                handle_achievement_progress_events,
+            ).chain());
     }
 }
 
@@ -168,7 +166,7 @@ fn matches_achievement_condition(
 pub fn send_kill_enemy_event(
     enemy_id: String,
     amount: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::KillEnemy,
@@ -180,7 +178,7 @@ pub fn send_kill_enemy_event(
 /// 发送造成伤害事件
 pub fn send_deal_damage_event(
     amount: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::DealDamage,
@@ -192,7 +190,7 @@ pub fn send_deal_damage_event(
 /// 发送探索区域事件
 pub fn send_explore_area_event(
     area_id: String,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::ExploreArea,
@@ -205,7 +203,7 @@ pub fn send_explore_area_event(
 pub fn send_build_building_event(
     building_id: String,
     amount: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::BuildBuilding,
@@ -218,7 +216,7 @@ pub fn send_build_building_event(
 pub fn send_upgrade_building_event(
     building_id: String,
     amount: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::UpgradeBuilding,
@@ -231,7 +229,7 @@ pub fn send_upgrade_building_event(
 pub fn send_collect_resource_event(
     resource_id: String,
     amount: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::CollectResource,
@@ -243,7 +241,7 @@ pub fn send_collect_resource_event(
 /// 发送完成任务事件
 pub fn send_complete_quest_event(
     quest_id: String,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::CompleteQuest,
@@ -255,7 +253,7 @@ pub fn send_complete_quest_event(
 /// 发送完成日常任务事件
 pub fn send_complete_daily_quest_event(
     amount: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::CompleteDailyQuest,
@@ -267,7 +265,7 @@ pub fn send_complete_daily_quest_event(
 /// 发送达到等级事件
 pub fn send_reach_level_event(
     level: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::ReachLevel,
@@ -279,7 +277,7 @@ pub fn send_reach_level_event(
 /// 发送游戏时间事件
 pub fn send_play_time_event(
     seconds: u32,
-    events: &mut EventWriter<AchievementProgressEvent>,
+    mut events: EventWriter<AchievementProgressEvent>,
 ) {
     events.send(AchievementProgressEvent {
         condition_type: AchievementConditionType::PlayTime,

@@ -17,11 +17,11 @@ pub fn plant_seed(
         return;
     }
 
-    let window = windows.single();
-    let Ok((camera, camera_transform)) = cameras.single();
+    let Ok(window) = windows.single() else { return; };
+    let Ok((camera, camera_transform)) = cameras.single() else { return; };
 
     if let Some(world_position) = window.cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
         .map(|ray| ray.origin.truncate())
     {
         let tile_size = 32.0;
@@ -152,11 +152,11 @@ pub fn harvest_plants(
         return;
     }
 
-    let window = windows.single();
-    let Ok((camera, camera_transform)) = cameras.single();
+    let Ok(window) = windows.single() else { return; };
+    let Ok((camera, camera_transform)) = cameras.single() else { return; };
 
     if let Some(world_position) = window.cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
         .map(|ray| ray.origin.truncate())
     {
         let click_range = 32.0;
@@ -178,7 +178,7 @@ pub fn harvest_plants(
                 harvest_stats.record_harvest(plant.plant_type);
 
                 // 添加资源到玩家背包
-                let Ok(mut inventory) = player_inventory.single_mut();
+                let Ok(mut inventory) = player_inventory.single_mut() else { continue; };
                 inventory.energy += reward;
                 info!("收获 {:?} 获得 {} 能源", plant.plant_type, reward);
 

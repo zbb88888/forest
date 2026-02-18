@@ -55,7 +55,7 @@ fn handle_player_attack(
     mut player_query: Query<(Entity, &mut Combat, &mut PlayerCombat, &Transform)>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
 ) {
-    let Ok((player_entity, mut combat, mut player_combat, player_transform)) = player_query.single_mut();
+    let Ok((player_entity, mut combat, mut player_combat, player_transform)) = player_query.single_mut() else { return; };
     // 普通攻击
     if mouse_input.just_pressed(MouseButton::Left) {
         perform_player_attack(
@@ -254,7 +254,7 @@ fn update_player_combat(
     time: Res<Time>,
     mut player_query: Query<&mut PlayerCombat>,
 ) {
-    let Ok(mut player_combat) = player_query.single_mut();
+    let Ok(mut player_combat) = player_query.single_mut() else { return; };
     // 更新连击计时器
     if player_combat.combo_timer > 0.0 {
         player_combat.combo_timer -= time.delta_secs();

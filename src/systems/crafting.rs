@@ -224,7 +224,7 @@ fn update_crafting_status(
 /// 检查制造条件
 fn check_crafting_conditions(
     recipe_book: Res<RecipeBook>,
-    inventory: Res<Inventory>,
+    inventory: Res<crate::components::crafting::CraftingInventory>,
 ) {
     let craftable = recipe_book.get_craftable_recipes(&inventory);
     if !craftable.is_empty() {

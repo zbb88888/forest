@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::ecs::event::EventReader;
 use crate::components::defense::{
     DefenseTower, DefenseTowerType, DefenseEffect, DefenseEffectType, DefenseStats
 };
@@ -12,11 +11,11 @@ pub struct DefenseTowerPlugin;
 impl Plugin for DefenseTowerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_defense_towers.run_if(in_state(crate::states::GameState::InGame)),
-            update_tower_attacks.run_if(in_state(crate::states::GameState::InGame)),
-            update_tower_rotation.run_if(in_state(crate::states::GameState::InGame)),
-            update_defense_stats.run_if(in_state(crate::states::GameState::InGame)),
-        ));
+            update_defense_towers,
+            update_tower_attacks,
+            update_tower_rotation,
+            update_defense_stats,
+        ).chain());
     }
 }
 
