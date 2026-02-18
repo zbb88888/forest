@@ -5,6 +5,7 @@ use crate::resources::world::{MapGrid, TileType, TileData, TILE_SIZE, CHUNK_SIZE
 use crate::systems::time::{GameTime, DayPhase, MoonPhase};
 use crate::components::player::Player;
 use crate::states::GameState;
+use noise::{NoiseFn, Simplex, Seedable};
 use rand::{Rng, SeedableRng};
 
 #[derive(Resource)]
@@ -69,18 +70,9 @@ pub fn setup_map(
 ) {
     let width = 20u32;
     let height = 20u32;
-    let seed = 42u64;
+    let seed = 42u32;
 
-    let mut map_grid = MapGrid::new(width, height, seed);
-
-    let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
-    for y in 0..height {
-        for x in 0..width {
-            let noise_val = rng.gen::<f32>();
-            let tile_type = determine_tile_type(noise_val, x, y, width, height);
-            map_grid.set(x, y, TileData::new(tile_type));
-        }
-    }
+    let map_grid = generate_map_with_noise(width, height, seed);
 
     commands.insert_resource(map_grid);
 
@@ -89,18 +81,18 @@ pub fn setup_map(
     commands.trigger(MapReadyEvent {
         width,
         height,
-        seed,
+        seed: seed as u64,
     });
 
-    info!("MapGrid initialized with procedural generation");
+    info!("MapGrid initialized with Simplex noise generation");
 }
 
-fn determine_tile_type(noise: f32, x: u32, y: u32, width: u32, height: u32) -> TileType {
-    let dist_from_center = ((x as f32 - width as f32 / 2.0).powi(2)
-        + (y as f32 - height as f32 / 2.0).powi(2)).sqrt()
-        / ((width.pow(2) + height.pow(2)) as f32).sqrt();
+fn determine_tile_type(noise_value: f64, x: u32, y: u32, width: u32, height: u32) -> TileType {
+    let dist_from_center = ((x as f64 - width as f64 / 2.0).powi(2)
+        + (y as f64 - height as f64 / 2.0).powi(2)).sqrt()
+        / ((width.pow(2) + height.pow(2)) as f64).sqrt();
 
-    let adjusted_noise = noise + dist_from_center * 0.3;
+    let adjusted_noise = noise_value + dist_from_center * 0.3;
 
     if adjusted_noise < 0.25 {
         TileType::Water
@@ -115,6 +107,27 @@ fn determine_tile_type(noise: f32, x: u32, y: u32, width: u32, height: u32) -> T
     } else {
         TileType::Mountain
     }
+}
+
+fn generate_map_with_noise(width: u32, height: u32, seed: u32) -> MapGrid {
+    let mut map_grid = MapGrid::new(width, height, seed as u64);
+
+    let simplex = Simplex::new(seed);
+    let scale = 0.08;
+
+    for y in 0..height {
+        for x in 0..width {
+            let nx = x as f64 * scale;
+            let ny = y as f64 * scale;
+
+            let noise_value = (simplex.get([nx, ny]) + 1.0) / 2.0;
+
+            let tile_type = determine_tile_type(noise_value, x, y, width, height);
+            map_grid.set(x, y, TileData::new(tile_type));
+        }
+    }
+
+    map_grid
 }
 
 fn spawn_chunk_mesh(
