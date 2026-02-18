@@ -16,6 +16,7 @@ bevy = { path = "/Users/ftwhmg/game/bevy", default-features = false, features = 
     "bevy_gltf",
     "bevy_render",
     "bevy_sprite",
+    "bevy_sprite_render",
     "bevy_text",
     "bevy_ui",
     "multi_threaded",

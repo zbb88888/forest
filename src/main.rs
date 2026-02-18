@@ -1,7 +1,4 @@
 use bevy::prelude::*;
-use bevy::app::ScheduleRunnerPlugin;
-use std::time::Duration;
-use std::env;
 
 mod states;
 mod systems;
@@ -43,37 +40,20 @@ fn main() {
         eprintln!("PANIC: {}", info);
     }));
 
-    let is_headless = env::var("HEADLESS").is_ok();
-
-    let mut app = App::new();
-
-    if is_headless {
-        app.add_plugins(MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(
-            1.0 / 60.0,
-        ))));
-
-        app.add_plugins(bevy::log::LogPlugin::default());
-        app.add_plugins(bevy::state::app::StatesPlugin);
-
-        println!("Running in HEADLESS mode (MinimalPlugins)");
-
-        app.add_systems(Startup, start_game_headless);
-    } else {
-        app.add_plugins(DefaultPlugins.set(WindowPlugin {
+    App::new()
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Dark Forest".into(),
                 resolution: (1280, 720).into(),
                 ..default()
             }),
             ..default()
-        }));
-
-        app.add_plugins((MenuPlugin, HUDPlugin));
-
-        println!("Running in GRAPHICS mode");
-    }
-
-    app.init_state::<GameState>()
+        }))
+        .add_plugins((MenuPlugin, HUDPlugin))
+        .init_state::<GameState>()
+        .add_systems(Startup, |mut next_state: ResMut<NextState<GameState>>| {
+            next_state.set(GameState::InGame);
+        })
         .add_systems(Startup, setup)
         .add_systems(Startup, systems::time::init_game_time)
         .add_systems(Startup, systems::lighting::init_lighting)
@@ -106,17 +86,19 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    if std::env::var("HEADLESS").is_err() {
-        commands.spawn((
-            Camera2d,
-            Transform::default(),
-            GlobalTransform::default(),
-        ));
-    }
-    println!("Dark Forest Initialized!");
-}
+    let map_width = 20;
+    let map_height = 20;
+    let tile_size = 32.0;
 
-fn start_game_headless(mut state: ResMut<NextState<GameState>>) {
-    state.set(GameState::InGame);
-    println!("Headless mode: Auto-starting game...");
+    let offset_x = -(map_width as f32 * tile_size) / 2.0 + tile_size / 2.0;
+    let offset_y = -(map_height as f32 * tile_size) / 2.0 + tile_size / 2.0;
+    let center_x = offset_x + (map_width / 2) as f32 * tile_size;
+    let center_y = offset_y + (map_height / 2) as f32 * tile_size;
+
+    commands.spawn((
+        Camera2d,
+        Transform::from_xyz(center_x, center_y, 100.0),
+        GlobalTransform::default(),
+    ));
+    println!("Dark Forest Initialized! Camera at ({}, {})", center_x, center_y);
 }

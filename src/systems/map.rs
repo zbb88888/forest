@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use bevy_sprite_render::ColorMaterial;
+use bevy_mesh::Mesh2d;
 use crate::resources::world::{WorldMap, MapTile, TileType};
 use rand::Rng;
 
@@ -29,17 +31,12 @@ pub fn setup_map(mut commands: Commands) {
 
             let tile = MapTile::new(tile_type, x, y);
 
-            // Visual representation
-            // We use Sprite component directly as per Bevy 0.18 standards
-            // Required Components (Transform, Visibility) are added automatically
+            // Visual representation using ColorMaterial and Mesh2d for Bevy 0.18
             let color = tile_type.color();
 
             commands.spawn((
-                Sprite {
-                    color,
-                    custom_size: Some(Vec2::splat(tile_size - 1.0)), // -1.0 for grid lines
-                    ..default()
-                },
+                ColorMaterial::from_color(color),
+                Mesh2d::default(),
                 Transform::from_xyz(
                     offset_x + x as f32 * tile_size,
                     offset_y + y as f32 * tile_size,

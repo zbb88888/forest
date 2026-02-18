@@ -6,9 +6,10 @@ pub struct SaveUIPlugin;
 
 impl Plugin for SaveUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
-            update_save_ui.run_if(in_state(crate::states::GameState::InGame)),
-        ));
+        app.init_resource::<SaveUIState>()
+            .add_systems(Update, (
+                update_save_ui.run_if(in_state(crate::states::GameState::InGame)),
+            ));
     }
 }
 

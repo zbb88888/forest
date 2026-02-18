@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::components::crafting::{
-    CraftingRecipe, RecipeBook, QualityControl, UpgradeOptimization,
+    CraftingInventory, CraftingRecipe, RecipeBook, QualityControl, UpgradeOptimization,
     MaterialType
 };
 use crate::components::equipment::{Equipment, EquipmentStats, EquipmentType, EquipmentRarity};
@@ -14,6 +14,7 @@ impl Plugin for CraftingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<RecipeBook>()
             .init_resource::<Inventory>()
+            .init_resource::<CraftingInventory>()
             .init_resource::<QualityControl>()
             .init_resource::<UpgradeOptimization>()
             .add_systems(Startup, initialize_recipes)

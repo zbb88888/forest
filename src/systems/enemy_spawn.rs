@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use bevy_sprite_render::ColorMaterial;
+use bevy_mesh::Mesh2d;
 use rand::Rng;
 use crate::components::enemy::{
     Enemy, EnemyType, EnemyBase, EnemyPosition, EnemyStatus, EnemySpawnConfig
@@ -134,11 +136,8 @@ fn spawn_enemy(
     let color = enemy_type.color();
 
     commands.spawn((
-        Sprite {
-            color,
-            custom_size: Some(Vec2::new(tile_size * 0.8, tile_size * 0.8)),
-            ..default()
-        },
+        ColorMaterial::from_color(color),
+        Mesh2d::default(),
         Transform::from_xyz(pos_x, pos_y, 1.0),
         GlobalTransform::default(),
         enemy,
@@ -220,11 +219,8 @@ fn spawn_base(
     };
 
     commands.spawn((
-        Sprite {
-            color,
-            custom_size: Some(Vec2::new(size, size)),
-            ..default()
-        },
+        ColorMaterial::from_color(color),
+        Mesh2d::default(),
         Transform::from_xyz(pos_x, pos_y, 0.5),
         GlobalTransform::default(),
         EnemyBase::new(base_type),

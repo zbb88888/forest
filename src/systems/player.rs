@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use bevy_sprite_render::ColorMaterial;
+use bevy_mesh::Mesh2d;
 use crate::resources::world::WorldMap;
 use crate::components::player::Player;
 use crate::components::resource::Inventory;
@@ -21,7 +23,7 @@ pub fn spawn_player(
     let pos_x = offset_x + center_x as f32 * tile_size;
     let pos_y = offset_y + center_y as f32 * tile_size;
 
-    // Bevy 0.18: Use Required Components tuple instead of Bundle
+    // Bevy 0.18: Use ColorMaterial and Mesh2d for 2D rendering
     commands.spawn((
         Player {
             id: 0,
@@ -34,11 +36,8 @@ pub fn spawn_player(
             energy: 100, // Initial energy
         },
         EquipmentBar::default(),
-        Sprite {
-            color: Color::srgb(1.0, 0.0, 0.0), // Red player
-            custom_size: Some(Vec2::splat(tile_size * 0.8)),
-            ..default()
-        },
+        ColorMaterial::from_color(Color::srgb(1.0, 0.0, 0.0)), // Red player
+        Mesh2d::default(),
         Transform::from_xyz(pos_x, pos_y, 1.0), // Z=1
         GlobalTransform::default(),
     ));

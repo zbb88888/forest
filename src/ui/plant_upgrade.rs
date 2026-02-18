@@ -7,12 +7,13 @@ pub struct PlantUpgradeUIPlugin;
 
 impl Plugin for PlantUpgradeUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
-            toggle_plant_upgrade_panel.run_if(in_state(GameState::InGame)),
-            update_plant_upgrade_panel.run_if(in_state(GameState::InGame)),
-            handle_upgrade_button.run_if(in_state(GameState::InGame)),
-            handle_unlock_button.run_if(in_state(GameState::InGame)),
-        ));
+        app.init_resource::<PlantUpgradeUIState>()
+            .add_systems(Update, (
+                toggle_plant_upgrade_panel.run_if(in_state(GameState::InGame)),
+                update_plant_upgrade_panel.run_if(in_state(GameState::InGame)),
+                handle_upgrade_button.run_if(in_state(GameState::InGame)),
+                handle_unlock_button.run_if(in_state(GameState::InGame)),
+            ));
     }
 }
 

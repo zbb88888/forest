@@ -9,12 +9,13 @@ pub struct CraftingUIPlugin;
 
 impl Plugin for CraftingUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
-            toggle_crafting_panel.run_if(in_state(GameState::InGame)),
-            update_crafting_panel.run_if(in_state(GameState::InGame)),
-            handle_recipe_button.run_if(in_state(GameState::InGame)),
-            handle_upgrade_button.run_if(in_state(GameState::InGame)),
-        ));
+        app.init_resource::<CraftingUIState>()
+            .add_systems(Update, (
+                toggle_crafting_panel.run_if(in_state(GameState::InGame)),
+                update_crafting_panel.run_if(in_state(GameState::InGame)),
+                handle_recipe_button.run_if(in_state(GameState::InGame)),
+                handle_upgrade_button.run_if(in_state(GameState::InGame)),
+            ));
     }
 }
 
