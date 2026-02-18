@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::ecs::event::{EventReader, EventWriter};
 use crate::components::combat::{
     Combat, DamageEvent, HealEvent, DeathEvent, CombatEffect, CombatEffectType,
     CombatStats, DamageType

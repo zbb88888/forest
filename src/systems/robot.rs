@@ -110,7 +110,7 @@ pub fn robot_ai_system(
             RobotTask::Harvest => {
                 // 移动到目标位置
                 if let Some(target) = robot.target_position {
-                    move_towards_target(transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_secs());
+                    move_towards_target(&mut transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_secs());
 
                     // 检查是否到达目标
                     if transform.translation.truncate().distance(target) < 32.0 {
@@ -140,7 +140,7 @@ pub fn robot_ai_system(
             }
             RobotTask::Patrol => {
                 if let Some(target) = robot.target_position {
-                    move_towards_target(transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_secs());
+                    move_towards_target(&mut transform, target, robot.robot_type.movement_speed() * night_multiplier * time.delta_secs());
 
                     if transform.translation.truncate().distance(target) < 10.0 {
                         robot.current_task = RobotTask::Idle;
@@ -152,7 +152,7 @@ pub fn robot_ai_system(
                 // 返回玩家位置
                 let Ok(player_transform) = player_query.single() else { continue; };
                 let player_pos = player_transform.translation.truncate();
-                move_towards_target(transform, player_pos, robot.robot_type.movement_speed() * time.delta_secs());
+                move_towards_target(&mut transform, player_pos, robot.robot_type.movement_speed() * time.delta_secs());
 
                 if transform.translation.truncate().distance(player_pos) < 50.0 {
                     // 卸载资源
